@@ -1,4 +1,4 @@
-# golang gen windows server
+# golang gen windows helper
 
 [![go version](https://img.shields.io/github/go-mod/go-version/reggiepy/win_helper?color=success&filename=go.mod&style=flat)](https://github.com/reggiepy/win_helper)
 [![release](https://img.shields.io/github/v/tag/reggiepy/win_helper?color=success&label=release)](https://github.com/reggiepy/win_helper)
