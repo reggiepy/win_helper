@@ -3,17 +3,19 @@ package sub
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"win_helper/pkg/helper"
+	"win_helper/helper"
 	"win_helper/pkg/util"
 )
 
 var (
-	baseDir string
+	baseDir           string
+	isGenLanguageStr  string
+	isGenLanguageBool bool
 )
 
 func init() {
 	initProjectCmd.Flags().StringVarP(&baseDir, "dir", "d", "", "base directory")
-	_ = initProjectCmd.MarkFlagRequired("dir")
+	initProjectCmd.Flags().StringVarP(&isGenLanguageStr, "language", "l", "false", "gen language directory")
 	rootCmd.AddCommand(initProjectCmd)
 }
 
@@ -31,8 +33,24 @@ var initProjectCmd = &cobra.Command{
 			}
 		}
 
+		switch isGenLanguageStr {
+		case "true":
+			isGenLanguageBool = true
+		case "false":
+			isGenLanguageBool = false
+		case "True":
+			isGenLanguageBool = true
+		case "False":
+			isGenLanguageBool = false
+		case "1":
+			isGenLanguageBool = true
+		case "0":
+			isGenLanguageBool = false
+		}
+		option := helper.IsGenLanguageDir(isGenLanguageBool)
 		project := helper.NewProject(
 			helper.BaseDir(baseDir),
+			option,
 		)
 		project.Create()
 	},

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
-	"win_helper/pkg/helper"
+	"win_helper/helper"
 	"win_helper/pkg/util"
 )
 
@@ -24,4 +24,5 @@ func main() {
 	file, _ = util.GetCurrentDirectory()
 	fmt.Println(file)
 	fmt.Println(filepath.Abs(filepath.Join(file, "../../test")))
+	fmt.Println(helper.GenLanguagePaths("./"))
 }
