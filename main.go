@@ -17,6 +17,7 @@ func main() {
 	for _, p := range project.DirPaths {
 		fmt.Println(p)
 	}
+	fmt.Println("**********************************************************************************")
 	project.Create()
 	var file string
 	file, _ = util.GetExeDirectory()

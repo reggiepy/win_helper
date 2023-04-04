@@ -25,13 +25,15 @@ var ChildDirs = []string{
 	"Docker",
 	"Nginx",
 	"C",
+	"Inno Setup",
+	"windows",
 }
 
 type Project struct {
 	BaseDir  string
 	DirPaths []string
 	// 配置
-	isGenLanguage bool
+	IsGenLanguage bool
 }
 
 // 定义一个函数签名
@@ -57,7 +59,7 @@ func BaseDir(baseDir string) ProjectOption {
 }
 func IsGenLanguageDir(isGenLanguage bool) ProjectOption {
 	return func(p *Project) {
-		p.isGenLanguage = isGenLanguage
+		p.IsGenLanguage = isGenLanguage
 	}
 }
 
@@ -95,7 +97,7 @@ func NewProject(options ...ProjectOption) *Project {
 	for i, d := range Dirs {
 		dPath := fmt.Sprintf("%02d %s", i+1, d)
 		project.DirPaths = append(project.DirPaths, dPath)
-		if project.isGenLanguage {
+		if project.IsGenLanguage {
 			childPaths := GenLanguagePaths(dPath)
 			project.DirPaths = append(project.DirPaths, childPaths...)
 		}
