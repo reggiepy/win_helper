@@ -27,6 +27,7 @@ var ChildDirs = []string{
 	"C",
 	"Inno Setup",
 	"windows",
+	"Arduino",
 }
 
 type Project struct {
