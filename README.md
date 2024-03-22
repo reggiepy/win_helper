@@ -17,8 +17,8 @@ go mod tidy
 ## Usage
 
 ```bash
-go run cmd/main.go
-go build -o win_helper.exe cmd/main.go
+go run win_helper/cmd/win_helper
+go build win_helper/cmd/win_helper
 ```
 
 ## Architecture

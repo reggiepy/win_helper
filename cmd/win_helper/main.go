@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"win_helper/cmd/sub"
+	"win_helper/cmd/win_helper/sub"
 )
 
 func main() {

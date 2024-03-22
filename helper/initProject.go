@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"win_helper/pkg/util"
+	"win_helper/pkg/util/fileUtils"
 )
 
 var Dirs = []string{
@@ -44,7 +44,7 @@ func BaseDir(baseDir string) ProjectOption {
 	return func(p *Project) {
 		var err error
 		if baseDir == "" {
-			baseDir, err = util.GetCurrentDirectory()
+			baseDir, err = fileUtils.GetCurrentDirectory()
 			if err != nil {
 				panic((fmt.Errorf("get current dir error: %v\n", err)).(any))
 			}
@@ -75,7 +75,7 @@ func GenLanguagePaths(parent string) []string {
 
 func CreateDirs(dirs []string) {
 	for _, dir := range dirs {
-		if util.FileExist(dir) {
+		if fileUtils.FileExist(dir) {
 			continue
 		}
 		err := os.MkdirAll(dir, 0755)
