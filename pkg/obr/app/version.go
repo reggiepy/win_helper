@@ -213,7 +213,7 @@ func (v *Version) PushTags() error {
 	return nil
 }
 
-// replaceVersionInFile 用于替换文件中指定行的版本号。
+// ReplaceIssVersion 用于替换文件中指定行的版本号。
 // 参数：
 //   - filePath: 文件路径
 //   - newVersion: 新的版本号
@@ -221,17 +221,24 @@ func (v *Version) PushTags() error {
 // 返回值：
 //   - error: 如果发生错误，返回非空错误；否则返回nil。
 func (v *Version) ReplaceIssVersion() error {
+	// 获取新的版本号
 	newVersion, err := v.GetVersion()
 	if err != nil {
 		return err
 	}
 	filePath := v.Options.IssPath
-	// 打开文件
-	file, err := os.Open(filePath)
+
+	// 读取原始文件内容到内存中
+	fileBytes, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("error opening file: %v", err)
+		return fmt.Errorf("error reading file: %v", err)
 	}
-	defer file.Close()
+
+	// 将文件内容转换为字符串进行处理
+	fileContent := string(fileBytes)
+
+	// 替换版本号
+	fileContent = strings.Replace(fileContent, "#define MyAppVersion", "#define MyAppVersion \""+newVersion+"\"", 1)
 
 	// 创建一个临时文件用于保存修改后的内容
 	tempFile, err := os.CreateTemp("", "temp_*.iss")
@@ -240,31 +247,13 @@ func (v *Version) ReplaceIssVersion() error {
 	}
 	defer tempFile.Close()
 
-	// 创建一个带缓冲的写入器
-	writer := bufio.NewWriter(tempFile)
-	defer writer.Flush()
-
-	// 使用带缓冲的读取器逐行读取文件内容并替换指定行的版本号
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "#define MyAppVersion") {
-			// 如果是要替换的行，则将版本号替换为新的版本号
-			line = fmt.Sprintf("#define MyAppVersion \"%s\"", newVersion)
-		}
-		// 将每一行写入临时文件
-		_, err := fmt.Fprintln(writer, line)
-		if err != nil {
-			return fmt.Errorf("error writing to temporary file: %v", err)
-		}
+	// 将修改后的内容写入临时文件
+	_, err = tempFile.WriteString(fileContent)
+	if err != nil {
+		return fmt.Errorf("error writing to temporary file: %v", err)
 	}
 
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("error scanning file: %v", err)
-	}
-
-	// 关闭文件
-	file.Close()
+	// 关闭临时文件
 	tempFile.Close()
 
 	// 删除原始文件
