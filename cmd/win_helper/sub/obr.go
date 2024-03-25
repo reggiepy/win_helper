@@ -65,25 +65,21 @@ var obrVersionCmd = &cobra.Command{
 		}
 		fmt.Printf("%s ---> %s\n", currentVersion, nowVersion)
 		if pushTag {
-			fmt.Printf("git message: %s\n", gitMessage)
-			err = v.AddTag()
+			err = v.HandleTag()
 			if err != nil {
-				return err
-			}
-			err = v.PushTags()
-			if err != nil {
-				return err
+				fmt.Printf("处理tag异常: %v\n", err)
 			}
 		}
 		// 替换 iss version
 		if replaceIssVersion {
 			err = v.ReplaceIssVersion()
 			if err != nil {
-				return err
+				fmt.Printf("替换iss版本异常: %v\n", err)
 			}
 		}
 		err = v.SaveVersion()
 		if err != nil {
+			fmt.Printf("保存版本文件异常: %v\n", err)
 			return err
 		}
 		return nil

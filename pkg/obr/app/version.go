@@ -2,7 +2,6 @@ package app
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,85 +11,68 @@ import (
 	versionUtil "win_helper/pkg/util/version"
 )
 
-// Options 结构体定义了一些配置项，比如版本号、消息和版本目录。
-type Options struct {
-	Version    string `json:"version"`
-	Message    string `json:"message"`
-	VersionDir string `json:"version_dir"`
-	IssPath    string `json:"iss_path"`
-}
-
 // DefaultOption 返回默认选项。
-func DefaultOption() *Options {
-	return &Options{
+func DefaultVersion() *Version {
+	return &Version{
 		Version: "+",
 		Message: "New version",
 		IssPath: "C:\\dist\\chemical_server.iss",
 	}
 }
 
-// Option 接口定义了配置选项的通用行为。
-type Option interface {
-	apply(opt *Options) error
-}
-
-// OptionFunc 用于封装配置选项的函数。
-type OptionFunc func(opt *Options) error
-
-// apply 方法应用配置选项到 Options 结构体。
-func (f OptionFunc) apply(opt *Options) error {
-	return f(opt)
-}
+// VersionFunc 用于封装配置选项的函数。
+type VersionFunc func(v *Version) error
 
 // WithVersion 设置版本号的选项。
-func WithVersion(version string) Option {
-	return OptionFunc(func(opt *Options) error {
-		opt.Version = version
+func WithVersion(version string) VersionFunc {
+	return func(v *Version) error {
+		v.Version = version
 		return nil
-	})
+	}
 }
 
 // WithMessage 设置消息的选项。
-func WithMessage(message string) Option {
-	return OptionFunc(func(opt *Options) error {
-		opt.Message = message
+func WithMessage(message string) VersionFunc {
+	return func(v *Version) error {
+		v.Message = message
 		return nil
-	})
+	}
 }
 
 // WithVersionDir 设置版本目录的选项。
-func WithVersionDir(versionDir string) Option {
-	return OptionFunc(func(opt *Options) error {
-		opt.VersionDir = versionDir
+func WithVersionDir(versionDir string) VersionFunc {
+	return func(v *Version) error {
+		v.VersionDir = versionDir
 		return nil
-	})
+	}
 }
 
 // WithIssPath
-func WithIssPath(issPath string) Option {
-	return OptionFunc(func(opt *Options) error {
-		opt.IssPath = issPath
+func WithIssPath(issPath string) VersionFunc {
+	return func(v *Version) error {
+		v.IssPath = issPath
 		return nil
-	})
+	}
 }
 
 // NewVersion 创建一个新的 Version 实例，并根据提供的选项进行配置。
-func NewVersion(opts ...Option) *Version {
-	opt := DefaultOption()
-	for _, o := range opts {
-		err := o.apply(opt)
+func NewVersion(vfs ...VersionFunc) *Version {
+	v := DefaultVersion()
+	for _, f := range vfs {
+		err := f(v)
 		if err != nil {
 			panic(err)
 		}
 	}
-	return &Version{
-		Options: opt,
-	}
+	return v
 }
 
 // Version 结构体封装了版本管理的功能，包括获取当前版本、保存版本、添加标签和推送标签。
 type Version struct {
-	Options *Options `json:"options"`
+	Version    string `json:"version"`
+	Message    string `json:"message"`
+	VersionDir string `json:"version_dir"`
+	IssPath    string `json:"iss_path"`
 }
 
 // GetVersion 获取下一个版本。
@@ -105,9 +87,9 @@ func (v *Version) GetVersion() (string, error) {
 	versionMinor := versionUtil.Minor(versionStr)
 
 	// 根据配置的版本号增加或减少版本号的各个部分
-	switch v.Options.Version {
+	switch v.Version {
 	case "":
-		return "", fmt.Errorf("version %s is not supported", v.Options.Version)
+		return "", fmt.Errorf("version %s is not supported", v.Version)
 	case "+++":
 		versionProto++
 	case "---":
@@ -122,7 +104,7 @@ func (v *Version) GetVersion() (string, error) {
 		versionMinor--
 	default:
 		// 如果版本号类型未知，则直接返回配置的版本号
-		return v.Options.Version, nil
+		return v.Version, nil
 	}
 
 	// 根据修改后的版本号构建新的版本字符串
@@ -133,7 +115,7 @@ func (v *Version) GetVersion() (string, error) {
 // CurrentVersion 获取当前版本号。
 func (v *Version) CurrentVersion() (string, error) {
 	var err error
-	fileName := filepath.Join(v.Options.VersionDir, "VERSION")
+	fileName := filepath.Join(v.VersionDir, "VERSION")
 	if !fileUtils.FileExist(fileName) {
 		return "", fmt.Errorf("%v does not exist", fileName)
 	}
@@ -158,10 +140,10 @@ func (v *Version) SaveVersion() error {
 	if err != nil {
 		return err
 	}
-	if !fileUtils.FileExist(v.Options.VersionDir) {
-		return fmt.Errorf("%v does not exist", v.Options.VersionDir)
+	if !fileUtils.FileExist(v.VersionDir) {
+		return fmt.Errorf("%v does not exist", v.VersionDir)
 	}
-	fileName := filepath.Join(v.Options.VersionDir, "VERSION")
+	fileName := filepath.Join(v.VersionDir, "VERSION")
 	// 创建或打开文件，以只写模式打开，文件权限为 0644
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
@@ -190,26 +172,36 @@ func (v *Version) AddTag() error {
 	version, err := v.GetVersion()
 	tagName := fmt.Sprintf("v%s", version)
 	var cmd = []string{"git", "tag", tagName}
-	if v.Options.Message != "" {
-		cmd = append(cmd, "-m", v.Options.Message)
+	if v.Message != "" {
+		cmd = append(cmd, "-m", v.Message)
 	}
-	stdout, stderr, err := runCommand(cmd...)
+	_, err = runCommand(cmd...)
 	if err != nil {
-		return fmt.Errorf("error: %v", err)
+		return fmt.Errorf("创建标签失败: %v", err)
 	}
-	fmt.Printf("stderr: %s\n", stderr)
-	fmt.Printf("stdout: %s\n", stdout)
 	return nil
 }
 
 // PushTags 推送所有标签。
 func (v *Version) PushTags() error {
-	stdout, stderr, err := runCommand("git", "push", "origin", "--tags")
+	_, err := runCommand("git", "push", "origin", "--tags")
 	if err != nil {
-		return fmt.Errorf("error: %v", err)
+		return fmt.Errorf("推送标签失败: %v", err)
 	}
-	fmt.Printf("stderr: %s\n", stderr)
-	fmt.Printf("stdout: %s\n", stdout)
+	return nil
+}
+
+func (v *Version) HandleTag() error {
+	var err error
+	fmt.Printf("git message: %s\n", v.Message)
+	err = v.AddTag()
+	if err != nil {
+		return err
+	}
+	err = v.PushTags()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -226,7 +218,7 @@ func (v *Version) ReplaceIssVersion() error {
 	if err != nil {
 		return err
 	}
-	filePath := v.Options.IssPath
+	filePath := v.IssPath
 
 	// 读取原始文件内容到内存中
 	fileBytes, err := os.ReadFile(filePath)
@@ -237,8 +229,20 @@ func (v *Version) ReplaceIssVersion() error {
 	// 将文件内容转换为字符串进行处理
 	fileContent := string(fileBytes)
 
+	// 以换行符分割文件内容，保留换行符
+	lines := strings.SplitAfterN(fileContent, "\n", -1)
+
 	// 替换版本号
-	fileContent = strings.Replace(fileContent, "#define MyAppVersion", "#define MyAppVersion \""+newVersion+"\"", 1)
+	for i, line := range lines {
+		if strings.Contains(line, "#define MyAppVersion") {
+			// 如果是版本号行，则替换版本号
+			lines[i] = fmt.Sprintf("#define MyAppVersion \"%s\"\n", newVersion)
+			break // 替换完第一个版本号后退出循环
+		}
+	}
+
+	// 将修改后的内容拼接为字符串
+	newFileContent := strings.Join(lines, "")
 
 	// 创建一个临时文件用于保存修改后的内容
 	tempFile, err := os.CreateTemp("", "temp_*.iss")
@@ -248,7 +252,7 @@ func (v *Version) ReplaceIssVersion() error {
 	defer tempFile.Close()
 
 	// 将修改后的内容写入临时文件
-	_, err = tempFile.WriteString(fileContent)
+	_, err = tempFile.WriteString(newFileContent)
 	if err != nil {
 		return fmt.Errorf("error writing to temporary file: %v", err)
 	}
@@ -272,17 +276,16 @@ func (v *Version) ReplaceIssVersion() error {
 }
 
 // runCommand 执行系统命令，并返回标准输出和标准错误输出。
-func runCommand(args ...string) (string, string, error) {
+func runCommand(args ...string) (string, error) {
 	var cmd *exec.Cmd
 	var err error
-	fmt.Println(strings.Join(args, " "))
+	cmdStr := strings.Join(args, " ")
+	fmt.Printf("执行命令: %s\n", cmdStr)
 	cmd = exec.Command(args[0], args[1:]...) // 将命令和参数分开传递
-	var outbuf, errbuf bytes.Buffer
-	cmd.Stdout = &outbuf
-	cmd.Stderr = &errbuf
-	err = cmd.Run()
+	out, err := cmd.CombinedOutput()
+	fmt.Printf("执行命令输出: %s\n", string(out))
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	return outbuf.String(), errbuf.String(), nil
+	return string(out), nil
 }
