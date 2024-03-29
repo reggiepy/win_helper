@@ -16,15 +16,15 @@ var server []byte
 
 type ServerXML struct {
 	XMLName     xml.Name `xml:"service"`
-	Id          string   `xml:"id"`
-	Name        string   `xml:"name,omitempty"`
-	Description string   `xml:"description,omitempty"`
-	LogPath     string   `xml:"logpath,omitempty"`
+	Id          string   `xml:"id" json:"id"`
+	Name        string   `xml:"name,omitempty" json:"name,omitempty"`
+	Description string   `xml:"description,omitempty" json:"description,omitempty"`
+	LogPath     string   `xml:"logpath,omitempty" json:"logpath,omitempty"`
 	//环境
-	Env          *Env          `xml:"env,omitempty"`
-	Log          *Log          `xml:"log"`
-	Dependencies []*Dependency `xml:"depend,omitempty"`
-	Executable   string        `xml:"executable,omitempty"`
+	Env          *Env          `xml:"env,omitempty" json:"env,omitempty"`
+	Log          *Log          `xml:"log" json:"log"`
+	Dependencies []*Dependency `xml:"depend,omitempty" json:"dependencies,omitempty"`
+	Executable   string        `xml:"executable,omitempty" json:"executable,omitempty"`
 	//Arguments
 	//Optional The element specifies the arguments to be passed to the executable.<arguments>
 	//<arguments>arg1 arg2 arg3</arguments>
@@ -34,8 +34,8 @@ type ServerXML struct {
 	//arg2
 	//arg3
 	//</arguments>
-	Arguments        string `xml:"arguments,omitempty"`
-	WorkingDirectory string `xml:"workingdirectory,omitempty"`
+	Arguments        string `xml:"arguments,omitempty" json:"arguments,omitempty"`
+	WorkingDirectory string `xml:"workingdirectory,omitempty" json:"workingdirectory,omitempty"`
 
 	//stopargument/stopexecutable
 	//Optional When the service is requested to stop, winsw simply calls TerminateProcess function to kill the service instantly.
@@ -47,64 +47,64 @@ type ServerXML struct {
 	//<startarguments>jpda run</startarguments>
 	//<stopexecutable>catalina.sh</stopexecutable>
 	//<stoparguments>stop</stoparguments>
-	StartArguments string `xml:"startarguments,omitempty"`
-	StopExecutable string `xml:"stopexecutable,omitempty"`
-	StopArguments  string `xml:"stoparguments,omitempty"`
+	StartArguments string `xml:"startarguments,omitempty" json:"startarguments,omitempty"`
+	StopExecutable string `xml:"stopexecutable,omitempty" json:"stopexecutable,omitempty"`
+	StopArguments  string `xml:"stoparguments,omitempty" json:"stoparguments,omitempty"`
 
 	//关机前
 	//在系统关闭时为服务提供更多停止时间。
-	PreShutdown string `xml:"preshutdown,omitempty"`
+	PreShutdown string `xml:"preshutdown,omitempty" json:"preshutdown,omitempty"`
 	//系统默认的关机前超时时间为三分钟。
-	PreShutdownTimeout string `xml:"preshutdownTimeout,omitempty"`
+	PreShutdownTimeout string `xml:"preshutdownTimeout,omitempty" json:"preshutdownTimeout,omitempty"`
 
 	//StopTimeout
-	StopTimeout string `xml:"stoptimeout,omitempty"`
+	StopTimeout string `xml:"stoptimeout,omitempty" json:"stoptimeout,omitempty"`
 
 	//哔哔关门
 	//可选元素用于在服务关闭时发出简单的提示音。 此功能应仅用于调试，因为某些操作系统和硬件不支持此功能。
-	BeepOnShutdown bool `xml:"beeponshutdown,omitempty"`
+	BeepOnShutdown bool `xml:"beeponshutdown,omitempty" json:"beeponshutdown,omitempty"`
 
 	// OnFailures（失败）
-	OnFailures []*OnFailure `xml:"onfailure,omitempty"`
+	OnFailures []*OnFailure `xml:"onfailure,omitempty" json:"onfailures,omitempty"`
 
 	//Additional commands
-	PreStart  *AdditionalCommands `xml:"prestart,omitempty"`
-	PostStart *AdditionalCommands `xml:"poststart,omitempty"`
-	PreStop   *AdditionalCommands `xml:"prestop,omitempty"`
-	PostStop  *AdditionalCommands `xml:"poststop,omitempty"`
+	PreStart  *AdditionalCommands `xml:"prestart,omitempty" json:"prestart,omitempty"`
+	PostStart *AdditionalCommands `xml:"poststart,omitempty" json:"poststart,omitempty"`
+	PreStop   *AdditionalCommands `xml:"prestop,omitempty" json:"prestop,omitempty"`
+	PostStop  *AdditionalCommands `xml:"poststop,omitempty" json:"poststop,omitempty"`
 }
 
 type AdditionalCommands struct {
-	Executable string `xml:"executable,omitempty"`
-	Arguments  string `xml:"arguments,omitempty"`
+	Executable string `xml:"executable,omitempty" json:"executable,omitempty"`
+	Arguments  string `xml:"arguments,omitempty" json:"arguments,omitempty"`
 	//stdoutPath specifies the path to redirect the standard output to.
-	StdoutPath string `xml:"stdoutPath,omitempty"`
+	StdoutPath string `xml:"stdoutPath,omitempty" json:"stdoutPath,omitempty"`
 	//stderrPath specifies the path to redirect the standard error output to.
 	//Specify in or to dispose of the corresponding stream.NULstdoutPathstderrPath
-	StderrPath string `xml:"stderrPath,omitempty"`
+	StderrPath string `xml:"stderrPath,omitempty" json:"stderrPath,omitempty"`
 }
 
 type OnFailure struct {
-	Action string `xml:"action,omitempty"`
-	Delay  string `xml:"delay,omitempty"`
+	Action string `xml:"action,omitempty" json:"action,omitempty"`
+	Delay  string `xml:"delay,omitempty" json:"delay,omitempty"`
 }
 type Env struct {
-	Name  string `xml:"name,attr"`
-	Value string `xml:"value,attr"`
+	Name  string `xml:"name,attr" json:"name"`
+	Value string `xml:"value,attr" json:"value"`
 }
 
 type Log struct {
-	Mode                string `xml:"mode,attr"`
-	Pattern             string `xml:"pattern,omitempty"`
-	AutoRollAtTime      string `xml:"autoRollAtTime,omitempty"`
-	SizeThreshold       string `xml:"sizeThreshold,omitempty"`
-	ZipOlderThanNumDays string `xml:"zipOlderThanNumDays,omitempty"`
-	ZipDateFormat       string `xml:"zipDateFormat,omitempty"`
+	Mode                string `xml:"mode,attr" json:"mode"`
+	Pattern             string `xml:"pattern,omitempty" json:"pattern,omitempty"`
+	AutoRollAtTime      string `xml:"autoRollAtTime,omitempty" json:"autoRollAtTime,omitempty"`
+	SizeThreshold       string `xml:"sizeThreshold,omitempty" json:"sizeThreshold,omitempty"`
+	ZipOlderThanNumDays string `xml:"zipOlderThanNumDays,omitempty" json:"zipOlderThanNumDays,omitempty"`
+	ZipDateFormat       string `xml:"zipDateFormat,omitempty" json:"zipDateFormat,omitempty"`
 }
 
 type Dependency struct {
-	XMLName xml.Name `xml:"depend,omitempty"`
-	Value   string   `xml:",chardata"`
+	XMLName xml.Name `xml:"depend,omitempty" json:"-"`
+	Value   string   `xml:",chardata" json:"value"`
 }
 
 type Server struct {
