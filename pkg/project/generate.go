@@ -16,7 +16,7 @@ func GenLanguagePaths(parent string) []string {
 	return dirPaths
 }
 
-func GenerateDirs(dirs []string) {
+func CreateProjectDirs(dirs []string) {
 	for _, dir := range dirs {
 		if fileUtils.FileExist(dir) {
 			continue

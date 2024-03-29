@@ -5,28 +5,6 @@ import (
 	"path/filepath"
 )
 
-var Dirs = []string{
-	"CompanyProject",
-	"PersonProject",
-	"PublicProject",
-	"Scripts",
-	"Picture",
-	"Document",
-	"Software",
-}
-var ChildDirs = []string{
-	"Python",
-	"Front",
-	"Golang",
-	"c51",
-	"Docker",
-	"Nginx",
-	"C",
-	"Inno Setup",
-	"windows",
-	"Arduino",
-}
-
 type Project struct {
 	BaseDir  string
 	DirPaths []string
@@ -49,33 +27,27 @@ func WithIsGenLanguageDir(isGenLanguage bool) ProjectOption {
 }
 
 func NewProject(options ...ProjectOption) *Project {
-	project := &Project{
+	p := &Project{
 		DirPaths: []string{},
 	}
 	for _, o := range options {
-		o(project)
+		o(p)
 	}
-	if project.BaseDir == "" {
+	if p.BaseDir == "" {
 		panic((fmt.Errorf("project.BaseDir cannot be empty")).(any))
 	}
 	for i, d := range Dirs {
-		dPath := fmt.Sprintf("%02d %s", i+1, d)
-		project.DirPaths = append(project.DirPaths, dPath)
-		if project.IsGenLanguage {
+		dName := fmt.Sprintf("%02d %s", i+1, d)
+		dPath := filepath.Join(p.BaseDir, dName)
+		p.DirPaths = append(p.DirPaths, dPath)
+		if p.IsGenLanguage {
 			childPaths := GenLanguagePaths(dPath)
-			project.DirPaths = append(project.DirPaths, childPaths...)
+			p.DirPaths = append(p.DirPaths, childPaths...)
 		}
 	}
-	project.updateDirPaths()
-	return project
+	return p
 }
 
-func (p *Project) GenerateDirs() {
-	GenerateDirs(p.DirPaths)
-}
-
-func (p *Project) updateDirPaths() {
-	for i, dir := range p.DirPaths {
-		p.DirPaths[i] = filepath.Join(p.BaseDir, dir)
-	}
+func (p *Project) CreateProjectDirs() {
+	CreateProjectDirs(p.DirPaths)
 }

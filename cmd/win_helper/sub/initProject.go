@@ -13,14 +13,14 @@ var (
 func newInitProjectCmd() *cobra.Command {
 	var initProjectCmd = &cobra.Command{
 		Use:   "initProject",
-		Short: "init project directory",
+		Short: "init project directory。 生成",
 		Long:  `init project directory`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			p := project.NewProject(
 				project.WithBaseDir(initProjectDir),
 				project.WithIsGenLanguageDir(isGenLanguageBool),
 			)
-			p.GenerateDirs()
+			p.CreateProjectDirs()
 			return nil
 		},
 	}

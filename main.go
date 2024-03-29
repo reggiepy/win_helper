@@ -20,7 +20,7 @@ func T1() {
 		fmt.Println(p)
 	}
 	fmt.Println("**********************************************************************************")
-	p.GenerateDirs()
+	p.CreateProjectDirs()
 	var file string
 	file, _ = fileUtils.GetExeDirectory()
 	fmt.Println(file)

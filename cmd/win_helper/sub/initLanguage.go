@@ -12,7 +12,7 @@ func newInitLanguageCmd() *cobra.Command {
 		Long:  `init language directory`,
 		Run: func(cmd *cobra.Command, args []string) {
 			languagePaths := project.GenLanguagePaths(baseDir)
-			project.GenerateDirs(languagePaths)
+			project.CreateProjectDirs(languagePaths)
 		},
 	}
 	return initLanguageCmd
