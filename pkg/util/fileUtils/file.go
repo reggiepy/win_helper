@@ -18,11 +18,3 @@ func GetExeDirectory() (string, error) {
 	return dir, nil
 	//return strings.Replace(dir, "\\", "/", -1), nil
 }
-
-func GetCurrentDirectory() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("get current directory error: %v", err)
-	}
-	return dir, nil
-}

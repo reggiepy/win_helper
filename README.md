@@ -21,6 +21,31 @@ go run win_helper/cmd/win_helper
 go build win_helper/cmd/win_helper
 ```
 
+show help `win_helper -h`
+```bash
+win_helper is a CLI generator for windows service script
+
+Usage:
+  win_helper [flags]
+  win_helper [command]
+
+Available Commands:
+  completion   Generate the autocompletion script for the specified shell
+  help         Help about any command
+  initLanguage init language directory
+  initProject  init project directory
+  mklink       windows make link
+  obr          obr tools
+
+Flags:
+      --config string   config file (default is $HOME/.win_helper.yaml)
+  -h, --help            help for win_helper
+  -v, --version         version
+      --viper           use Viper for configuration (default true)
+
+Use "win_helper [command] --help" for more information about a command.
+```
+
 ## Architecture
 ```bash
 

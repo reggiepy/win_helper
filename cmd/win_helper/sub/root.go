@@ -12,6 +12,10 @@ import (
 var (
 	cfgFile     string
 	showVersion bool
+	verbose     bool
+
+	// 命令执行路径
+	baseDir string
 )
 
 func init() {
@@ -37,7 +41,8 @@ func newRootCmd() *cobra.Command {
 	}
 	rootCmd.PersistentFlags().BoolVarP(&showVersion, "version", "v", false, "version")
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.win_helper.yaml)")
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "show verbose output")
 	rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
 	_ = viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
 
@@ -58,7 +63,15 @@ func er(msg interface{}) {
 	os.Exit(1)
 }
 
+func showMessage(msg interface{}) {
+	if verbose {
+		fmt.Println(msg)
+	}
+}
+
 func initConfig() {
+	baseDir, _ = os.Getwd()
+	showMessage(fmt.Sprintf("baseDir : %s", baseDir))
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)

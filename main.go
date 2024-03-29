@@ -14,27 +14,23 @@ func T1() {
 	fmt.Println(fmt.Sprintf("%02d", 100))
 	fmt.Println(path.Join("a", "b"))
 	p := project.NewProject(
-		project.BaseDir("./test"),
+		project.WithBaseDir("./test"),
 	)
 	for _, p := range p.DirPaths {
 		fmt.Println(p)
 	}
 	fmt.Println("**********************************************************************************")
-	p.Create()
+	p.GenerateDirs()
 	var file string
 	file, _ = fileUtils.GetExeDirectory()
-	fmt.Println(file)
-	file, _ = fileUtils.GetCurrentDirectory()
 	fmt.Println(file)
 	fmt.Println(filepath.Abs(filepath.Join(file, "../../test")))
 	fmt.Println(project.GenLanguagePaths("./"))
 }
 
 func T2() {
-	versionDir, err := fileUtils.GetCurrentDirectory()
-	if err != nil {
-		return
-	}
+	var err error
+	versionDir, _ := os.Getwd()
 	v := app.NewVersion(
 		app.WithVersion("+"),
 		app.WithVersionDir(versionDir),

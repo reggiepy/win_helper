@@ -2,10 +2,7 @@ package project
 
 import (
 	"fmt"
-	"os"
-	"path"
 	"path/filepath"
-	"win_helper/pkg/util/fileUtils"
 )
 
 var Dirs = []string{
@@ -40,48 +37,14 @@ type Project struct {
 // 定义一个函数签名
 type ProjectOption func(*Project)
 
-func BaseDir(baseDir string) ProjectOption {
+func WithBaseDir(baseDir string) ProjectOption {
 	return func(p *Project) {
-		var err error
-		if baseDir == "" {
-			baseDir, err = fileUtils.GetCurrentDirectory()
-			if err != nil {
-				panic((fmt.Errorf("get current dir error: %v\n", err)).(any))
-			}
-		}
-		if !path.IsAbs(baseDir) {
-			baseDir, err = filepath.Abs(baseDir)
-			if err != nil {
-				panic((fmt.Errorf("get file abs path error: %v\n", err)).(any))
-			}
-		}
 		p.BaseDir = baseDir
 	}
 }
-func IsGenLanguageDir(isGenLanguage bool) ProjectOption {
+func WithIsGenLanguageDir(isGenLanguage bool) ProjectOption {
 	return func(p *Project) {
 		p.IsGenLanguage = isGenLanguage
-	}
-}
-
-func GenLanguagePaths(parent string) []string {
-	var dirPaths []string
-	for index, childDir := range ChildDirs {
-		childPath := path.Join(parent, fmt.Sprintf("%02d %sProject", index+1, childDir))
-		dirPaths = append(dirPaths, childPath)
-	}
-	return dirPaths
-}
-
-func CreateDirs(dirs []string) {
-	for _, dir := range dirs {
-		if fileUtils.FileExist(dir) {
-			continue
-		}
-		err := os.MkdirAll(dir, 0755)
-		if err != nil {
-			fmt.Printf("Error creating: %s\n", err)
-		}
 	}
 }
 
@@ -107,8 +70,8 @@ func NewProject(options ...ProjectOption) *Project {
 	return project
 }
 
-func (p *Project) Create() {
-	CreateDirs(p.DirPaths)
+func (p *Project) GenerateDirs() {
+	GenerateDirs(p.DirPaths)
 }
 
 func (p *Project) updateDirPaths() {
