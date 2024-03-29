@@ -2,6 +2,7 @@ package win
 
 import (
 	_ "embed"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"os"
@@ -15,16 +16,34 @@ import (
 var server []byte
 
 type ServerXML struct {
-	XMLName     xml.Name `xml:"service"`
-	Id          string   `xml:"id" json:"id"`
-	Name        string   `xml:"name,omitempty" json:"name,omitempty"`
-	Description string   `xml:"description,omitempty" json:"description,omitempty"`
-	LogPath     string   `xml:"logpath,omitempty" json:"logpath,omitempty"`
-	//环境
-	Env          *Env          `xml:"env,omitempty" json:"env,omitempty"`
-	Log          *Log          `xml:"log" json:"log"`
+	XMLName xml.Name `xml:"service"`
+	Id      string   `xml:"id" json:"id"`
+	//Executable
+	//Required This element specifies the executable to be launched. It can be either absolute path, or you can just specify the executable name and let it be searched from PATH (although note that the services often run in a different user account and therefore it might have different PATH than your shell does.)
+	Executable string `xml:"executable" json:"executable"`
+	//Name
+	//Optional Short display name of the service, which can contain spaces and other characters. This shouldn't be too long, like <id>, and this also needs to be unique among all the services in a given system.
+	Name string `xml:"name,omitempty" json:"name,omitempty"`
+	//Description
+	//Optional Long human-readable description of the service. This gets displayed in Windows service manager when the service is selected.
+	Description string `xml:"description,omitempty" json:"description,omitempty"`
+	//StartMode
+	//Optional This element specifies the start mode of the Windows service. It can be one of the following values: Automatic, or Manual. For more information, see the ChangeStartMode method. The default value is Automatic.
+	//Boot Start ("Boot")
+	//Device driver started by the operating system loader. This value is valid only for driver services.
+	//System ("System")
+	//Device driver started by the operating system initialization process. This value is valid only for driver services.
+	//Auto Start ("Automatic")
+	//Service to be started automatically by the service control manager during system startup.
+	//Demand Start ("Manual")
+	//Service to be started by the service control manager when a process calls the StartService method.
+	//Disabled ("Disabled")
+	//Service that can no longer be started.
+	StartMode string `xml:"startmode,omitempty" json:"startmode,omitempty"`
+	//Optional Specify IDs of other services that this service depends on. When service X depends on service Y, X can only run if Y is running.
+	//Multiple elements can be used to specify multiple dependencies.
 	Dependencies []*Dependency `xml:"depend,omitempty" json:"dependencies,omitempty"`
-	Executable   string        `xml:"executable,omitempty" json:"executable,omitempty"`
+	LogPath      string        `xml:"logpath,omitempty" json:"logpath,omitempty"`
 	//Arguments
 	//Optional The element specifies the arguments to be passed to the executable.<arguments>
 	//<arguments>arg1 arg2 arg3</arguments>
@@ -34,8 +53,7 @@ type ServerXML struct {
 	//arg2
 	//arg3
 	//</arguments>
-	Arguments        string `xml:"arguments,omitempty" json:"arguments,omitempty"`
-	WorkingDirectory string `xml:"workingdirectory,omitempty" json:"workingdirectory,omitempty"`
+	Arguments string `xml:"arguments,omitempty" json:"arguments,omitempty"`
 
 	//stopargument/stopexecutable
 	//Optional When the service is requested to stop, winsw simply calls TerminateProcess function to kill the service instantly.
@@ -50,6 +68,10 @@ type ServerXML struct {
 	StartArguments string `xml:"startarguments,omitempty" json:"startarguments,omitempty"`
 	StopExecutable string `xml:"stopexecutable,omitempty" json:"stopexecutable,omitempty"`
 	StopArguments  string `xml:"stoparguments,omitempty" json:"stoparguments,omitempty"`
+	//Additional commands
+	PreStart  *AdditionalCommands `xml:"prestart,omitempty" json:"prestart,omitempty"`
+	PostStart *AdditionalCommands `xml:"poststart,omitempty" json:"poststart,omitempty"`
+	PreStop   *AdditionalCommands `xml:"prestop,omitempty" json:"prestop,omitempty"`
 
 	//关机前
 	//在系统关闭时为服务提供更多停止时间。
@@ -59,19 +81,16 @@ type ServerXML struct {
 
 	//StopTimeout
 	StopTimeout string `xml:"stoptimeout,omitempty" json:"stoptimeout,omitempty"`
-
+	//环境
+	Env *Env `xml:"env,omitempty" json:"env,omitempty"`
 	//哔哔关门
 	//可选元素用于在服务关闭时发出简单的提示音。 此功能应仅用于调试，因为某些操作系统和硬件不支持此功能。
 	BeepOnShutdown bool `xml:"beeponshutdown,omitempty" json:"beeponshutdown,omitempty"`
-
+	Log            *Log `xml:"log" json:"log"`
 	// OnFailures（失败）
 	OnFailures []*OnFailure `xml:"onfailure,omitempty" json:"onfailures,omitempty"`
 
-	//Additional commands
-	PreStart  *AdditionalCommands `xml:"prestart,omitempty" json:"prestart,omitempty"`
-	PostStart *AdditionalCommands `xml:"poststart,omitempty" json:"poststart,omitempty"`
-	PreStop   *AdditionalCommands `xml:"prestop,omitempty" json:"prestop,omitempty"`
-	PostStop  *AdditionalCommands `xml:"poststop,omitempty" json:"poststop,omitempty"`
+	WorkingDirectory string `xml:"workingdirectory,omitempty" json:"workingdirectory,omitempty"`
 }
 
 type AdditionalCommands struct {
@@ -110,29 +129,30 @@ type Dependency struct {
 type Server struct {
 	BasePath string
 
-	Name                   string
-	Description            string
-	Executable             string
-	Arguments              string
-	StopExecutable         string
-	LogMode                string
-	LogPattern             string
-	LogAutoRollAtTime      string
-	LogSizeThreshold       string
-	LogZipOlderThanNumDays string
-	LogZipDateFormat       string
-	StartMode              string
-	Depends                string
+	SId               string
+	SExecutable       string
+	SName             string
+	SDescription      string
+	SStartMode        string
+	SDepends          string
+	SLogPath          string
+	SArguments        string
+	SStartArguments   string
+	SStopExecutable   string
+	SStopArguments    string
+	SEnv              string
+	SFailure          string
+	SWorkingDirectory string
+
+	SLogMode                string
+	SLogPattern             string
+	SLogAutoRollAtTime      string
+	SLogSizeThreshold       string
+	SLogZipOlderThanNumDays string
+	SLogZipDateFormat       string
 }
 
 type Option func(s *Server) error
-
-func WithExecutable(exec string) Option {
-	return func(s *Server) error {
-		s.Executable = exec
-		return nil
-	}
-}
 
 func WithBasePath(basePath string) Option {
 	return func(s *Server) error {
@@ -141,28 +161,154 @@ func WithBasePath(basePath string) Option {
 	}
 }
 
-func WithName(name string) Option {
+func WithSId(id string) Option {
 	return func(s *Server) error {
-		s.Name = name
+		s.SId = id
 		return nil
 	}
 }
 
-func WithLogMode(logMode string) Option {
+func WithSExecutable(executable string) Option {
 	return func(s *Server) error {
-		s.LogMode = logMode
+		s.SExecutable = executable
+		return nil
+	}
+}
+
+func WithSName(name string) Option {
+	return func(s *Server) error {
+		s.SName = name
+		return nil
+	}
+}
+
+func WithSDescription(description string) Option {
+	return func(s *Server) error {
+		s.SDescription = description
+		return nil
+	}
+}
+
+func WithSStartMode(startMode string) Option {
+	return func(s *Server) error {
+		s.SStartMode = startMode
+		return nil
+	}
+}
+
+func WithSDepends(depends string) Option {
+	return func(s *Server) error {
+		s.SDepends = depends
+		return nil
+	}
+}
+
+func WithSLogPath(logPath string) Option {
+	return func(s *Server) error {
+		s.SLogPath = logPath
+		return nil
+	}
+}
+
+func WithSArguments(arguments string) Option {
+	return func(s *Server) error {
+		s.SArguments = arguments
+		return nil
+	}
+}
+
+func WithSStartArguments(startArguments string) Option {
+	return func(s *Server) error {
+		s.SStartArguments = startArguments
+		return nil
+	}
+}
+
+func WithSStopExecutable(stopExecutable string) Option {
+	return func(s *Server) error {
+		s.SStopExecutable = stopExecutable
+		return nil
+	}
+}
+
+func WithSStopArguments(stopArguments string) Option {
+	return func(s *Server) error {
+		s.SStopArguments = stopArguments
+		return nil
+	}
+}
+
+func WithSEnv(env string) Option {
+	return func(s *Server) error {
+		s.SEnv = env
+		return nil
+	}
+}
+
+func WithSFailure(failure string) Option {
+	return func(s *Server) error {
+		s.SFailure = failure
+		return nil
+	}
+}
+
+func WithSWorkingDirectory(workingDirectory string) Option {
+	return func(s *Server) error {
+		s.SWorkingDirectory = workingDirectory
+		return nil
+	}
+}
+
+func WithSLogMode(logMode string) Option {
+	return func(s *Server) error {
+		s.SLogMode = logMode
+		return nil
+	}
+}
+
+func WithSLogPattern(logPattern string) Option {
+	return func(s *Server) error {
+		s.SLogPattern = logPattern
+		return nil
+	}
+}
+
+func WithSLogAutoRollAtTime(autoRollAtTime string) Option {
+	return func(s *Server) error {
+		s.SLogAutoRollAtTime = autoRollAtTime
+		return nil
+	}
+}
+
+func WithSLogSizeThreshold(sizeThreshold string) Option {
+	return func(s *Server) error {
+		s.SLogSizeThreshold = sizeThreshold
+		return nil
+	}
+}
+
+func WithSLogZipOlderThanNumDays(zipOlderThanNumDays string) Option {
+	return func(s *Server) error {
+		s.SLogZipOlderThanNumDays = zipOlderThanNumDays
+		return nil
+	}
+}
+
+func WithSLogZipDateFormat(zipDateFormat string) Option {
+	return func(s *Server) error {
+		s.SLogZipDateFormat = zipDateFormat
 		return nil
 	}
 }
 
 func NewDefaultServer() *Server {
 	return &Server{
-		LogMode: "roll",
+		SLogMode: "roll",
 	}
 }
 
 func NewServer(opts ...Option) *Server {
-	s := &Server{}
+	s := NewDefaultServer()
 	for _, opt := range opts {
 		err := opt(s)
 		if err != nil {
@@ -173,7 +319,7 @@ func NewServer(opts ...Option) *Server {
 }
 
 func (s *Server) CreateServer() error {
-	fileName := path.Join(s.BasePath, fmt.Sprintf("%s-server.exe", s.Executable))
+	fileName := path.Join(s.BasePath, fmt.Sprintf("%s-server.exe", s.SExecutable))
 	if fileUtils.FileExist(fileName) {
 		return fmt.Errorf("%s already exists", fileName)
 	}
@@ -186,13 +332,13 @@ func (s *Server) CreateServer() error {
 
 func (s *Server) CreateServerXML() error {
 	serverXML := &ServerXML{
-		Id:         s.Name,
-		Executable: s.Executable,
+		Id:         s.SName,
+		Executable: s.SExecutable,
 		Log: &Log{
-			Mode: s.LogMode,
+			Mode: s.SLogMode,
 		},
 	}
-	switch s.LogMode {
+	switch s.SLogMode {
 	case "append":
 		serverXML.Log.Mode = "append"
 	case "reset":
@@ -206,16 +352,16 @@ func (s *Server) CreateServerXML() error {
 
 	case "roll-by-time":
 		serverXML.Log.Mode = "roll-by-time"
-		serverXML.Log.Pattern = s.LogPattern
-		serverXML.Log.SizeThreshold = s.LogSizeThreshold
-		serverXML.Log.AutoRollAtTime = s.LogAutoRollAtTime
+		serverXML.Log.Pattern = s.SLogPattern
+		serverXML.Log.SizeThreshold = s.SLogSizeThreshold
+		serverXML.Log.AutoRollAtTime = s.SLogAutoRollAtTime
 	}
 
-	if s.StopExecutable != "" {
-		serverXML.StopExecutable = s.StopExecutable
+	if s.SStopExecutable != "" {
+		serverXML.StopExecutable = s.SStopExecutable
 	}
 
-	depends := strings.Split(s.Depends, ",")
+	depends := strings.Split(s.SDepends, ",")
 	if len(depends) > 1 || (len(depends) == 1 && depends[0] != "") {
 		// 存在依赖项
 		serverXML.Dependencies = make([]*Dependency, len(depends))
@@ -224,8 +370,10 @@ func (s *Server) CreateServerXML() error {
 		}
 	}
 
-	fmt.Println(serverXML)
-	filename := filepath.Join(s.BasePath, fmt.Sprintf("%s-server.xml", s.Executable))
+	if jsonData, err := json.Marshal(serverXML); err == nil {
+		fmt.Println(string(jsonData))
+	}
+	filename := filepath.Join(s.BasePath, fmt.Sprintf("%s-server.xml", s.SExecutable))
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
