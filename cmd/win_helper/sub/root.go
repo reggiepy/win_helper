@@ -50,6 +50,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newInitLanguageCmd())
 	rootCmd.AddCommand(newMakeLinkCmd())
 	rootCmd.AddCommand(newObrCmd())
+	rootCmd.AddCommand(newServerCmd())
 	return rootCmd
 }
 
