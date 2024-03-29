@@ -69,7 +69,7 @@ func newServerCmd() *cobra.Command {
 	serverCmd.Flags().StringVar(&sName, "name", "", "name")
 	serverCmd.Flags().StringVar(&sExecutable, "executable", "", "executable")
 	serverCmd.Flags().StringVar(&sDescription, "description", "", "description")
-	serverCmd.Flags().StringVar(&sStartMode, "start-mode", "", "start mode")
+	serverCmd.Flags().StringVar(&sStartMode, "start-mode", "", "start-mode(Boot|System|Automatic|Manual|Disabled) (default: Automatic)")
 	serverCmd.Flags().StringVar(&sDepends, "depends", "", "depends")
 	serverCmd.Flags().StringVar(&sLogPath, "log-path", "", "log path")
 	serverCmd.Flags().StringVar(&sArguments, "arguments", "", "arguments")
@@ -96,7 +96,6 @@ func newServerCmd() *cobra.Command {
 	//Service to be started by the service control manager when a process calls the StartService method.
 	//Disabled ("Disabled")
 	//Service that can no longer be started.
-	serverCmd.Flags().StringVar(&sStartMode, "start-mode", "", "start-mode(Boot|System|Automatic|Manual|Disabled) (default: Automatic)")
 
 	return serverCmd
 }
