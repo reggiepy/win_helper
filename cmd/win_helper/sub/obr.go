@@ -2,6 +2,7 @@ package sub
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"win_helper/pkg/obr/app"
 )
@@ -31,7 +32,7 @@ func newObrCmd() *cobra.Command {
 }
 
 func newObrVersionCmd() *cobra.Command {
-	var obrVersionCmd = &cobra.Command{
+	obrVersionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "handle app version",
 		Long:  `handle app version.`,

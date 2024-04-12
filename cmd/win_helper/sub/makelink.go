@@ -2,9 +2,10 @@ package sub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
+
+	"github.com/spf13/cobra"
 )
 
 var (

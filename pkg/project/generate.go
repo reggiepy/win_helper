@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+
 	"win_helper/pkg/util/fileUtils"
 )
 
@@ -21,7 +22,7 @@ func CreateProjectDirs(dirs []string) {
 		if fileUtils.FileExist(dir) {
 			continue
 		}
-		err := os.MkdirAll(dir, 0755)
+		err := os.MkdirAll(dir, 0o755)
 		if err != nil {
 			fmt.Printf("Error creating: %s\n", err)
 		}

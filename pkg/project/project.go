@@ -20,6 +20,7 @@ func WithBaseDir(baseDir string) ProjectOption {
 		p.BaseDir = baseDir
 	}
 }
+
 func WithIsGenLanguageDir(isGenLanguage bool) ProjectOption {
 	return func(p *Project) {
 		p.IsGenLanguage = isGenLanguage

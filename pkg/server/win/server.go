@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
 	"win_helper/pkg/util/fileUtils"
 )
 
@@ -18,30 +19,30 @@ var server []byte
 type ServerXML struct {
 	XMLName xml.Name `xml:"service"`
 	Id      string   `xml:"id" json:"id"`
-	//Executable
-	//Required This element specifies the executable to be launched. It can be either absolute path, or you can just specify the executable name and let it be searched from PATH (although note that the services often run in a different user account and therefore it might have different PATH than your shell does.)
+	// Executable
+	// Required This element specifies the executable to be launched. It can be either absolute path, or you can just specify the executable name and let it be searched from PATH (although note that the services often run in a different user account and therefore it might have different PATH than your shell does.)
 	Executable string `xml:"executable" json:"executable"`
-	//Name
-	//Optional Short display name of the service, which can contain spaces and other characters. This shouldn't be too long, like <id>, and this also needs to be unique among all the services in a given system.
+	// Name
+	// Optional Short display name of the service, which can contain spaces and other characters. This shouldn't be too long, like <id>, and this also needs to be unique among all the services in a given system.
 	Name string `xml:"name,omitempty" json:"name"`
-	//Description
-	//Optional Long human-readable description of the service. This gets displayed in Windows service manager when the service is selected.
+	// Description
+	// Optional Long human-readable description of the service. This gets displayed in Windows service manager when the service is selected.
 	Description string `xml:"description" json:"description"`
-	//StartMode
-	//Optional This element specifies the start mode of the Windows service. It can be one of the following values: Automatic, or Manual. For more information, see the ChangeStartMode method. The default value is Automatic.
-	//Boot Start ("Boot")
-	//Device driver started by the operating system loader. This value is valid only for driver services.
-	//System ("System")
-	//Device driver started by the operating system initialization process. This value is valid only for driver services.
-	//Auto Start ("Automatic")
-	//Service to be started automatically by the service control manager during system startup.
-	//Demand Start ("Manual")
-	//Service to be started by the service control manager when a process calls the StartService method.
-	//Disabled ("Disabled")
-	//Service that can no longer be started.
+	// StartMode
+	// Optional This element specifies the start mode of the Windows service. It can be one of the following values: Automatic, or Manual. For more information, see the ChangeStartMode method. The default value is Automatic.
+	// Boot Start ("Boot")
+	// Device driver started by the operating system loader. This value is valid only for driver services.
+	// System ("System")
+	// Device driver started by the operating system initialization process. This value is valid only for driver services.
+	// Auto Start ("Automatic")
+	// Service to be started automatically by the service control manager during system startup.
+	// Demand Start ("Manual")
+	// Service to be started by the service control manager when a process calls the StartService method.
+	// Disabled ("Disabled")
+	// Service that can no longer be started.
 	StartMode string `xml:"startmode,omitempty" json:"startmode,omitempty"`
-	//Optional Specify IDs of other services that this service depends on. When service X depends on service Y, X can only run if Y is running.
-	//Multiple elements can be used to specify multiple dependencies.
+	// Optional Specify IDs of other services that this service depends on. When service X depends on service Y, X can only run if Y is running.
+	// Multiple elements can be used to specify multiple dependencies.
 	Dependencies []*Dependency `xml:"depend,omitempty" json:"dependencies,omitempty"`
 	LogPath      string        `xml:"logpath,omitempty" json:"logpath,omitempty"`
 	//Arguments
@@ -68,23 +69,23 @@ type ServerXML struct {
 	StartArguments string `xml:"startarguments,omitempty" json:"startarguments,omitempty"`
 	StopExecutable string `xml:"stopexecutable,omitempty" json:"stopexecutable,omitempty"`
 	StopArguments  string `xml:"stoparguments,omitempty" json:"stoparguments,omitempty"`
-	//Additional commands
+	// Additional commands
 	PreStart  *AdditionalCommands `xml:"prestart,omitempty" json:"prestart,omitempty"`
 	PostStart *AdditionalCommands `xml:"poststart,omitempty" json:"poststart,omitempty"`
 	PreStop   *AdditionalCommands `xml:"prestop,omitempty" json:"prestop,omitempty"`
 
-	//关机前
-	//在系统关闭时为服务提供更多停止时间。
+	// 关机前
+	// 在系统关闭时为服务提供更多停止时间。
 	PreShutdown string `xml:"preshutdown,omitempty" json:"preshutdown,omitempty"`
-	//系统默认的关机前超时时间为三分钟。
+	// 系统默认的关机前超时时间为三分钟。
 	PreShutdownTimeout string `xml:"preshutdownTimeout,omitempty" json:"preshutdownTimeout,omitempty"`
 
-	//StopTimeout
+	// StopTimeout
 	StopTimeout string `xml:"stoptimeout,omitempty" json:"stoptimeout,omitempty"`
-	//环境
+	// 环境
 	Env *Env `xml:"env,omitempty" json:"env,omitempty"`
-	//哔哔关门
-	//可选元素用于在服务关闭时发出简单的提示音。 此功能应仅用于调试，因为某些操作系统和硬件不支持此功能。
+	// 哔哔关门
+	// 可选元素用于在服务关闭时发出简单的提示音。 此功能应仅用于调试，因为某些操作系统和硬件不支持此功能。
 	BeepOnShutdown bool `xml:"beeponshutdown,omitempty" json:"beeponshutdown,omitempty"`
 	Log            *Log `xml:"log" json:"log"`
 	// OnFailures（失败）
@@ -96,10 +97,10 @@ type ServerXML struct {
 type AdditionalCommands struct {
 	Executable string `xml:"executable,omitempty" json:"executable,omitempty"`
 	Arguments  string `xml:"arguments,omitempty" json:"arguments,omitempty"`
-	//stdoutPath specifies the path to redirect the standard output to.
+	// stdoutPath specifies the path to redirect the standard output to.
 	StdoutPath string `xml:"stdoutPath,omitempty" json:"stdoutPath,omitempty"`
-	//stderrPath specifies the path to redirect the standard error output to.
-	//Specify in or to dispose of the corresponding stream.NULstdoutPathstderrPath
+	// stderrPath specifies the path to redirect the standard error output to.
+	// Specify in or to dispose of the corresponding stream.NULstdoutPathstderrPath
 	StderrPath string `xml:"stderrPath,omitempty" json:"stderrPath,omitempty"`
 }
 
@@ -338,7 +339,7 @@ func (s *Server) CreateServer() error {
 			return fmt.Errorf("服务文件 %s 已存在", filename)
 		}
 	}
-	err := os.WriteFile(filename, server, 0644)
+	err := os.WriteFile(filename, server, 0o644)
 	if err != nil {
 		return fmt.Errorf("写入服务失败。%v", err)
 	}

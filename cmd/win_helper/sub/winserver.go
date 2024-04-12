@@ -2,6 +2,7 @@ package sub
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"win_helper/pkg/server/win"
 )
@@ -90,16 +91,16 @@ func newServerCmd() *cobra.Command {
 	serverCmd.Flags().StringVar(&sLogZipDateFormat, "log-zip-date-format", "", "log zip date format")
 	serverCmd.Flags().BoolVar(&sForce, "force", true, "force write")
 
-	//Boot Start ("Boot")
-	//Device driver started by the operating system loader. This value is valid only for driver services.
-	//System ("System")
-	//Device driver started by the operating system initialization process. This value is valid only for driver services.
-	//Auto Start ("Automatic")
-	//Service to be started automatically by the service control manager during system startup.
-	//Demand Start ("Manual")
-	//Service to be started by the service control manager when a process calls the StartService method.
-	//Disabled ("Disabled")
-	//Service that can no longer be started.
+	// Boot Start ("Boot")
+	// Device driver started by the operating system loader. This value is valid only for driver services.
+	// System ("System")
+	// Device driver started by the operating system initialization process. This value is valid only for driver services.
+	// Auto Start ("Automatic")
+	// Service to be started automatically by the service control manager during system startup.
+	// Demand Start ("Manual")
+	// Service to be started by the service control manager when a process calls the StartService method.
+	// Disabled ("Disabled")
+	// Service that can no longer be started.
 
 	return serverCmd
 }

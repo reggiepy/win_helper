@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
 	"win_helper/pkg/util/fileUtils"
 	versionUtil "win_helper/pkg/util/version"
 )
@@ -145,7 +146,7 @@ func (v *Version) SaveVersion() error {
 	}
 	fileName := filepath.Join(v.VersionDir, "VERSION")
 	// 创建或打开文件，以只写模式打开，文件权限为 0644
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return fmt.Errorf("error: %v", err)
 	}
@@ -171,7 +172,7 @@ func (v *Version) SaveVersion() error {
 func (v *Version) AddTag() error {
 	version, err := v.GetVersion()
 	tagName := fmt.Sprintf("v%s", version)
-	var cmd = []string{"git", "tag", tagName}
+	cmd := []string{"git", "tag", tagName}
 	if v.Message != "" {
 		cmd = append(cmd, "-m", v.Message)
 	}
