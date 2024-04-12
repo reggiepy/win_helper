@@ -46,11 +46,10 @@ func newRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
 	_ = viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
 
-	rootCmd.AddCommand(newInitProjectCmd())
-	rootCmd.AddCommand(newInitLanguageCmd())
 	rootCmd.AddCommand(newMakeLinkCmd())
 	rootCmd.AddCommand(newObrCmd())
 	rootCmd.AddCommand(newServerCmd())
+	rootCmd.AddCommand(newInitCmd())
 	return rootCmd
 }
 

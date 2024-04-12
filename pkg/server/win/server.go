@@ -23,10 +23,10 @@ type ServerXML struct {
 	Executable string `xml:"executable" json:"executable"`
 	//Name
 	//Optional Short display name of the service, which can contain spaces and other characters. This shouldn't be too long, like <id>, and this also needs to be unique among all the services in a given system.
-	Name string `xml:"name,omitempty" json:"name,omitempty"`
+	Name string `xml:"name,omitempty" json:"name"`
 	//Description
 	//Optional Long human-readable description of the service. This gets displayed in Windows service manager when the service is selected.
-	Description string `xml:"description,omitempty" json:"description,omitempty"`
+	Description string `xml:"description" json:"description"`
 	//StartMode
 	//Optional This element specifies the start mode of the Windows service. It can be one of the following values: Automatic, or Manual. For more information, see the ChangeStartMode method. The default value is Automatic.
 	//Boot Start ("Boot")
@@ -128,6 +128,7 @@ type Dependency struct {
 
 type Server struct {
 	BasePath string
+	sForce   bool
 
 	SId               string
 	SExecutable       string
@@ -301,6 +302,13 @@ func WithSLogZipDateFormat(zipDateFormat string) Option {
 	}
 }
 
+func WithSForce(force bool) Option {
+	return func(s *Server) error {
+		s.sForce = force
+		return nil
+	}
+}
+
 func NewDefaultServer() *Server {
 	return &Server{
 		SLogMode: "roll",
@@ -319,11 +327,18 @@ func NewServer(opts ...Option) *Server {
 }
 
 func (s *Server) CreateServer() error {
-	fileName := path.Join(s.BasePath, fmt.Sprintf("%s-server.exe", s.SExecutable))
-	if fileUtils.FileExist(fileName) {
-		return fmt.Errorf("%s already exists", fileName)
+	filename := path.Join(s.BasePath, fmt.Sprintf("%s-server.exe", s.SName))
+	if fileUtils.FileExist(filename) {
+		if s.sForce {
+			err := os.Remove(filename)
+			if err != nil {
+				return fmt.Errorf("删除服务文件失败: %v", err)
+			}
+		} else {
+			return fmt.Errorf("服务文件 %s 已存在", filename)
+		}
 	}
-	err := os.WriteFile(fileName, server, 0644)
+	err := os.WriteFile(filename, server, 0644)
 	if err != nil {
 		return fmt.Errorf("写入服务失败。%v", err)
 	}
@@ -332,11 +347,30 @@ func (s *Server) CreateServer() error {
 
 func (s *Server) CreateServerXML() error {
 	serverXML := &ServerXML{
-		Id:         s.SName,
-		Executable: s.SExecutable,
+		Id:          s.SName,
+		Name:        s.SName,
+		Description: s.SDescription,
+		Executable:  s.SExecutable,
 		Log: &Log{
 			Mode: s.SLogMode,
 		},
+	}
+
+	if s.SArguments != "" {
+		serverXML.Arguments = s.SArguments
+	}
+	if s.SStartArguments != "" {
+		serverXML.StartArguments = s.SStartArguments
+	}
+	if s.SStopExecutable != "" {
+		serverXML.StopExecutable = s.SStopExecutable
+	}
+	if s.SStopArguments != "" {
+		serverXML.StopArguments = s.SStopArguments
+	}
+
+	if s.SLogPath != "" {
+		serverXML.LogPath = s.SLogPath
 	}
 	switch s.SLogMode {
 	case "append":
@@ -373,7 +407,17 @@ func (s *Server) CreateServerXML() error {
 	if jsonData, err := json.Marshal(serverXML); err == nil {
 		fmt.Println(string(jsonData))
 	}
-	filename := filepath.Join(s.BasePath, fmt.Sprintf("%s-server.xml", s.SExecutable))
+	filename := filepath.Join(s.BasePath, fmt.Sprintf("%s-server.xml", s.SName))
+	if fileUtils.FileExist(filename) {
+		if s.sForce {
+			err := os.Remove(filename)
+			if err != nil {
+				return fmt.Errorf("删除服务文件失败: %v", err)
+			}
+		} else {
+			return fmt.Errorf("服务文件 %s 已存在", filename)
+		}
+	}
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -391,10 +435,10 @@ func (s *Server) CreateServerXML() error {
 
 func (s *Server) Run() error {
 	var err error
-	//err = s.CreateServer()
-	//if err != nil {
-	//	return err
-	//}
+	err = s.CreateServer()
+	if err != nil {
+		return err
+	}
 	err = s.CreateServerXML()
 	if err != nil {
 		return err

@@ -7,6 +7,8 @@ import (
 )
 
 var (
+	sForce bool
+
 	sId                     string
 	sExecutable             string
 	sName                   string
@@ -31,9 +33,9 @@ var (
 
 func newServerCmd() *cobra.Command {
 	serverCmd := &cobra.Command{
-		Use:   "server",
-		Short: "generate windows exe server",
-		Long:  `generate windows exe server`,
+		Use:   "winserver-gen",
+		Short: "generate exe file's windows server",
+		Long:  `generate exe file's windows server`,
 		Args:  validateServerCmd,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			s := win.NewServer(
@@ -57,6 +59,7 @@ func newServerCmd() *cobra.Command {
 				win.WithSLogSizeThreshold(sLogSizeThreshold),
 				win.WithSLogZipOlderThanNumDays(sLogZipOlderThanNumDays),
 				win.WithSLogZipDateFormat(sLogZipDateFormat),
+				win.WithSForce(sForce),
 			)
 			err := s.Run()
 			if err != nil {
@@ -71,7 +74,7 @@ func newServerCmd() *cobra.Command {
 	serverCmd.Flags().StringVar(&sDescription, "description", "", "description")
 	serverCmd.Flags().StringVar(&sStartMode, "start-mode", "", "start-mode(Boot|System|Automatic|Manual|Disabled) (default: Automatic)")
 	serverCmd.Flags().StringVar(&sDepends, "depends", "", "depends")
-	serverCmd.Flags().StringVar(&sLogPath, "log-path", "", "log path")
+	serverCmd.Flags().StringVar(&sLogPath, "log-path", "logs", "log path")
 	serverCmd.Flags().StringVar(&sArguments, "arguments", "", "arguments")
 	serverCmd.Flags().StringVar(&sStartArguments, "start-arguments", "", "start arguments")
 	serverCmd.Flags().StringVar(&sStopExecutable, "stop-executable", "", "stop executable")
@@ -79,12 +82,13 @@ func newServerCmd() *cobra.Command {
 	serverCmd.Flags().StringVar(&sEnv, "env", "", "environment variables")
 	serverCmd.Flags().StringVar(&sFailure, "failure", "", "failure")
 	serverCmd.Flags().StringVar(&sWorkingDirectory, "working-directory", "", "working directory")
-	serverCmd.Flags().StringVar(&sLogMode, "log-mode", "", "log mode")
+	serverCmd.Flags().StringVar(&sLogMode, "log-mode", "roll", "log mode")
 	serverCmd.Flags().StringVar(&sLogPattern, "log-pattern", "", "log pattern")
 	serverCmd.Flags().StringVar(&sLogAutoRollAtTime, "log-auto-roll-at-time", "", "log auto roll at time")
 	serverCmd.Flags().StringVar(&sLogSizeThreshold, "log-size-threshold", "", "log size threshold")
 	serverCmd.Flags().StringVar(&sLogZipOlderThanNumDays, "log-zip-older-than-num-days", "", "log zip older than num days")
 	serverCmd.Flags().StringVar(&sLogZipDateFormat, "log-zip-date-format", "", "log zip date format")
+	serverCmd.Flags().BoolVar(&sForce, "force", true, "force write")
 
 	//Boot Start ("Boot")
 	//Device driver started by the operating system loader. This value is valid only for driver services.
