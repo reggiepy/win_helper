@@ -52,6 +52,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newObrCmd())
 	rootCmd.AddCommand(newServerCmd())
 	rootCmd.AddCommand(newInitCmd())
+	rootCmd.AddCommand(newMysqlCmd())
 	return rootCmd
 }
 
