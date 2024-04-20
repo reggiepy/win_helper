@@ -34,7 +34,15 @@ func newDumpMysqlCmd() *cobra.Command {
 		Use:   "dump",
 		Short: "dump mysql db command",
 		Long:  "dump mysql db command",
-		Args:  ValidateDumpMysqlCmd,
+		Args: func(cmd *cobra.Command, args []string) error {
+			if MY_Dsn == "" {
+				return fmt.Errorf("missing dsn")
+			}
+			if MY_Dest == "" {
+				return fmt.Errorf("missing dest")
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			f, _ := os.Create(MY_Dest)
 			_ = mysqldump.Dump(
@@ -52,22 +60,20 @@ func newDumpMysqlCmd() *cobra.Command {
 	return dumpMysqlCmd
 }
 
-func ValidateDumpMysqlCmd(cmd *cobra.Command, args []string) error {
-	if MY_Dsn == "" {
-		return fmt.Errorf("missing dsn")
-	}
-	if MY_Dest == "" {
-		return fmt.Errorf("missing dest")
-	}
-	return nil
-}
-
 func newSourceMysqlCmd() *cobra.Command {
 	sourceMysqlCmd := &cobra.Command{
 		Use:   "source",
 		Short: "source mysql db command",
 		Long:  "source mysql db command",
-		Args:  ValidateSourceMysqlCmd,
+		Args: func(cmd *cobra.Command, args []string) error {
+			if MY_Dsn == "" {
+				return fmt.Errorf("missing dsn")
+			}
+			if MY_Source == "" {
+				return fmt.Errorf("missing dest")
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			f, _ := os.Open(MY_Source)
 			_ = mysqldump.Source(
@@ -82,14 +88,4 @@ func newSourceMysqlCmd() *cobra.Command {
 	sourceMysqlCmd.Flags().StringVar(&MY_Dsn, "dsn", "", "Database dsn")
 	sourceMysqlCmd.Flags().StringVar(&MY_Source, "dest", "", "dest sql")
 	return sourceMysqlCmd
-}
-
-func ValidateSourceMysqlCmd(cmd *cobra.Command, args []string) error {
-	if MY_Dsn == "" {
-		return fmt.Errorf("missing dsn")
-	}
-	if MY_Source == "" {
-		return fmt.Errorf("missing dest")
-	}
-	return nil
 }

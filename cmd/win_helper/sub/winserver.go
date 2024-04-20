@@ -37,7 +37,18 @@ func newServerCmd() *cobra.Command {
 		Use:   "winserver-gen",
 		Short: "generate exe file's windows server",
 		Long:  `generate exe file's windows server`,
-		Args:  validateServerCmd,
+		Args: func(cmd *cobra.Command, args []string) error {
+			if sName == "" {
+				return fmt.Errorf("missing name")
+			}
+			if sId == "" {
+				sId = sName
+			}
+			if sExecutable == "" {
+				return fmt.Errorf("missing executable")
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			s := win.NewServer(
 				win.WithSId(sId),
@@ -103,17 +114,4 @@ func newServerCmd() *cobra.Command {
 	// Service that can no longer be started.
 
 	return serverCmd
-}
-
-func validateServerCmd(cmd *cobra.Command, args []string) error {
-	if sName == "" {
-		return fmt.Errorf("missing name")
-	}
-	if sId == "" {
-		sId = sName
-	}
-	if sExecutable == "" {
-		return fmt.Errorf("missing executable")
-	}
-	return nil
 }
