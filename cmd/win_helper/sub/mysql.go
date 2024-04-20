@@ -2,9 +2,10 @@ package sub
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/jarvanstack/mysqldump"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var (
@@ -40,7 +41,7 @@ func newDumpMysqlCmd() *cobra.Command {
 				MY_Dsn,                    // DSN
 				mysqldump.WithDropTable(), // Option: Delete table before create (Default: Not delete table)
 				mysqldump.WithData(),      // Option: Dump Data (Default: Only dump table schema)
-				//mysqldump.WithTables("test"), // Option: Dump Tables (Default: All tables)
+				// mysqldump.WithTables("test"), // Option: Dump Tables (Default: All tables)
 				mysqldump.WithWriter(f), // Option: Writer (Default: os.Stdout)
 			)
 			return nil
@@ -50,6 +51,7 @@ func newDumpMysqlCmd() *cobra.Command {
 	dumpMysqlCmd.Flags().StringVar(&MY_Dest, "dest", "", "dest sql")
 	return dumpMysqlCmd
 }
+
 func ValidateDumpMysqlCmd(cmd *cobra.Command, args []string) error {
 	if MY_Dsn == "" {
 		return fmt.Errorf("missing dsn")
@@ -59,6 +61,7 @@ func ValidateDumpMysqlCmd(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
 func newSourceMysqlCmd() *cobra.Command {
 	sourceMysqlCmd := &cobra.Command{
 		Use:   "source",
@@ -80,6 +83,7 @@ func newSourceMysqlCmd() *cobra.Command {
 	sourceMysqlCmd.Flags().StringVar(&MY_Source, "dest", "", "dest sql")
 	return sourceMysqlCmd
 }
+
 func ValidateSourceMysqlCmd(cmd *cobra.Command, args []string) error {
 	if MY_Dsn == "" {
 		return fmt.Errorf("missing dsn")
