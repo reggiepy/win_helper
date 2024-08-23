@@ -32,54 +32,9 @@ var (
 	sLogZipDateFormat       string
 )
 
-func newServerCmd() *cobra.Command {
-	serverCmd := &cobra.Command{
-		Use:   "winserver-gen",
-		Short: "generate exe file's windows server",
-		Long:  `generate exe file's windows server`,
-		Args: func(cmd *cobra.Command, args []string) error {
-			if sName == "" {
-				return fmt.Errorf("missing name")
-			}
-			if sId == "" {
-				sId = sName
-			}
-			if sExecutable == "" {
-				return fmt.Errorf("missing executable")
-			}
-			return nil
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			s := win.NewServer(
-				win.WithSId(sId),
-				win.WithSName(sName),
-				win.WithSExecutable(sExecutable),
-				win.WithSDescription(sDescription),
-				win.WithSStartMode(sStartMode),
-				win.WithSDepends(sDepends),
-				win.WithSLogPath(sLogPath),
-				win.WithSArguments(sArguments),
-				win.WithSStartArguments(sStartArguments),
-				win.WithSStopExecutable(sStopExecutable),
-				win.WithSStopArguments(sStopArguments),
-				win.WithSEnv(sEnv),
-				win.WithSFailure(sFailure),
-				win.WithSWorkingDirectory(sWorkingDirectory),
-				win.WithSLogMode(sLogMode),
-				win.WithSLogPattern(sLogPattern),
-				win.WithSLogAutoRollAtTime(sLogAutoRollAtTime),
-				win.WithSLogSizeThreshold(sLogSizeThreshold),
-				win.WithSLogZipOlderThanNumDays(sLogZipOlderThanNumDays),
-				win.WithSLogZipDateFormat(sLogZipDateFormat),
-				win.WithSForce(sForce),
-			)
-			err := s.Run()
-			if err != nil {
-				return err
-			}
-			return nil
-		},
-	}
+func init() {
+	rootCmd.AddCommand(serverCmd)
+
 	serverCmd.Flags().StringVar(&sId, "id", "", "Id(default=name)")
 	serverCmd.Flags().StringVar(&sName, "name", "", "name")
 	serverCmd.Flags().StringVar(&sExecutable, "executable", "", "executable")
@@ -112,6 +67,52 @@ func newServerCmd() *cobra.Command {
 	// Service to be started by the service control manager when a process calls the StartService method.
 	// Disabled ("Disabled")
 	// Service that can no longer be started.
+}
 
-	return serverCmd
+var serverCmd = &cobra.Command{
+	Use:   "winserver-gen",
+	Short: "generate exe file's windows server",
+	Long:  `generate exe file's windows server`,
+	Args: func(cmd *cobra.Command, args []string) error {
+		if sName == "" {
+			return fmt.Errorf("missing name")
+		}
+		if sId == "" {
+			sId = sName
+		}
+		if sExecutable == "" {
+			return fmt.Errorf("missing executable")
+		}
+		return nil
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		s := win.NewServer(
+			win.WithSId(sId),
+			win.WithSName(sName),
+			win.WithSExecutable(sExecutable),
+			win.WithSDescription(sDescription),
+			win.WithSStartMode(sStartMode),
+			win.WithSDepends(sDepends),
+			win.WithSLogPath(sLogPath),
+			win.WithSArguments(sArguments),
+			win.WithSStartArguments(sStartArguments),
+			win.WithSStopExecutable(sStopExecutable),
+			win.WithSStopArguments(sStopArguments),
+			win.WithSEnv(sEnv),
+			win.WithSFailure(sFailure),
+			win.WithSWorkingDirectory(sWorkingDirectory),
+			win.WithSLogMode(sLogMode),
+			win.WithSLogPattern(sLogPattern),
+			win.WithSLogAutoRollAtTime(sLogAutoRollAtTime),
+			win.WithSLogSizeThreshold(sLogSizeThreshold),
+			win.WithSLogZipOlderThanNumDays(sLogZipOlderThanNumDays),
+			win.WithSLogZipDateFormat(sLogZipDateFormat),
+			win.WithSForce(sForce),
+		)
+		err := s.Run()
+		if err != nil {
+			return err
+		}
+		return nil
+	},
 }
