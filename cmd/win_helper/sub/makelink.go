@@ -8,13 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	oldname string
-	newname string
-)
-
 func makeLink1(oldName string, newName string) error {
-	_, err := os.Stat(oldname)
+	_, err := os.Stat(oldName)
 	if err != nil {
 		return fmt.Errorf("获取文件夹信息失败: %v", err)
 	}
@@ -42,6 +37,9 @@ func newMakeLinkCmd() *cobra.Command {
 		Long:  `windows make link`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
+			oldname, _ := cmd.Flags().GetString("oldname")
+			newname, _ := cmd.Flags().GetString("newname")
+
 			if oldname == "" || newname == "" {
 				return fmt.Errorf("newname or oldname can't be empty'")
 			}
@@ -52,7 +50,7 @@ func newMakeLinkCmd() *cobra.Command {
 			return err
 		},
 	}
-	makeLinkCmd.Flags().StringVarP(&oldname, "oldname", "o", "", "gen language directory")
-	makeLinkCmd.Flags().StringVarP(&newname, "newname", "n", "", "gen language directory")
+	makeLinkCmd.Flags().StringP("oldname", "o", "", "gen language directory")
+	makeLinkCmd.Flags().StringP("newname", "n", "", "gen language directory")
 	return makeLinkCmd
 }

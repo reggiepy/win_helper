@@ -12,21 +12,8 @@ import (
 	"win_helper/pkg/util/fileUtils"
 )
 
-var (
-	//  --------------- <<< newInitReadmeCmd --------------------
-	initProjectName   string
-	initPythonVersion string
-	initDjangoVersion string
-
-	//go:embed ..\..\..\templates\Project\README.md.tpl
-	initReadmeTemplate []byte
-	//  --------------- newInitReadmeCmd >>> --------------------
-
-	//  --------------- <<< newInitProjectCmd --------------------
-	initProjectDir    string
-	isGenLanguageBool bool
-	//  --------------- newInitProjectCmd >>> --------------------
-)
+//go:embed ..\..\..\templates\Project\README.md.tpl
+var initReadmeTemplate []byte
 
 func newInitCmd() *cobra.Command {
 	initCmd := &cobra.Command{
@@ -51,16 +38,18 @@ func newInitProjectCmd() *cobra.Command {
 		Short: "init project directory。 生成",
 		Long:  `init project directory`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			dir, _ := cmd.Flags().GetString("dir")
+			isGenLanguageBool, _ := cmd.Flags().GetBool("language")
 			p := project.NewProject(
-				project.WithBaseDir(initProjectDir),
+				project.WithBaseDir(dir),
 				project.WithIsGenLanguageDir(isGenLanguageBool),
 			)
 			p.CreateProjectDirs()
 			return nil
 		},
 	}
-	initProjectCmd.Flags().StringVarP(&initProjectDir, "dir", "d", "./", "base directory")
-	initProjectCmd.Flags().BoolVarP(&isGenLanguageBool, "language", "l", false, "gen language directory")
+	initProjectCmd.Flags().StringP("dir", "d", "./", "base directory")
+	initProjectCmd.Flags().BoolP("language", "l", false, "gen language directory")
 	return initProjectCmd
 }
 
@@ -70,6 +59,7 @@ func newInitLanguageCmd() *cobra.Command {
 		Short: "init language directory",
 		Long:  `init language directory`,
 		Run: func(cmd *cobra.Command, args []string) {
+			baseDir, _ := os.Getwd()
 			languagePaths := project.GenLanguagePaths(baseDir)
 			project.CreateProjectDirs(languagePaths)
 		},
@@ -84,11 +74,15 @@ func newInitReadmeCmd() *cobra.Command {
 		Args:  validateInitReadmeCmd,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tplExample := pongo2.Must(pongo2.FromBytes(initReadmeTemplate))
+			projectName, _ := cmd.Flags().GetString("project-name")
+			pythonVersion, _ := cmd.Flags().GetString("python-version")
+			djangoVersion, _ := cmd.Flags().GetString("django-version")
+
 			out, err := tplExample.ExecuteBytes(
 				pongo2.Context{
-					"djangoVersion": initDjangoVersion,
-					"pythonVersion": initPythonVersion,
-					"projectName":   initProjectName,
+					"djangoVersion": djangoVersion,
+					"pythonVersion": pythonVersion,
+					"projectName":   projectName,
 				},
 			)
 			if err != nil {
@@ -128,24 +122,16 @@ func newInitReadmeCmd() *cobra.Command {
 		},
 	}
 
-	initReadmeCmd.Flags().StringVar(&initProjectName, "project-name", "", "project name (required)")
-	initReadmeCmd.Flags().StringVar(&initPythonVersion, "python-version", "", "python version (required)")
-	initReadmeCmd.Flags().StringVar(&initDjangoVersion, "django-version", "", "django version (required)")
+	initReadmeCmd.Flags().String("project-name", "", "project name (required)")
+	initReadmeCmd.Flags().String("python-version", "", "python version (required)")
+	initReadmeCmd.Flags().String("django-version", "", "django version (required)")
 	return initReadmeCmd
 }
 
 func validateInitReadmeCmd(cmd *cobra.Command, args []string) error {
-	if initProjectName == "" {
+	projectName, _ := cmd.Flags().GetString("project-name")
+	if projectName == "" {
 		return fmt.Errorf("project-name is required")
-	}
-	if initDjangoVersion != "" {
-		if initPythonVersion == "" {
-			return fmt.Errorf("python-version is required")
-		}
-	}
-
-	if initPythonVersion == "" {
-		return fmt.Errorf("python-version is required")
 	}
 
 	return nil

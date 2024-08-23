@@ -8,12 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	MY_Dsn    string = ""
-	MY_Source string = ""
-	MY_Dest   string = ""
-)
-
 func newMysqlCmd() *cobra.Command {
 	mysqlCmd := &cobra.Command{
 		Use:   "mysql",
@@ -35,18 +29,23 @@ func newDumpMysqlCmd() *cobra.Command {
 		Short: "dump mysql db command",
 		Long:  "dump mysql db command",
 		Args: func(cmd *cobra.Command, args []string) error {
-			if MY_Dsn == "" {
+			dns, _ := cmd.Flags().GetString("dsn")
+			if dns == "" {
 				return fmt.Errorf("missing dsn")
 			}
-			if MY_Dest == "" {
+			dest, _ := cmd.Flags().GetString("dest")
+			if dest == "" {
 				return fmt.Errorf("missing dest")
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			f, _ := os.Create(MY_Dest)
+			dest, _ := cmd.Flags().GetString("dest")
+			dns, _ := cmd.Flags().GetString("dsn")
+			f, _ := os.Create(dest)
+
 			_ = mysqldump.Dump(
-				MY_Dsn,                    // DSN
+				dns,                       // DSN
 				mysqldump.WithDropTable(), // Option: Delete table before create (Default: Not delete table)
 				mysqldump.WithData(),      // Option: Dump Data (Default: Only dump table schema)
 				// mysqldump.WithTables("test"), // Option: Dump Tables (Default: All tables)
@@ -55,8 +54,8 @@ func newDumpMysqlCmd() *cobra.Command {
 			return nil
 		},
 	}
-	dumpMysqlCmd.Flags().StringVar(&MY_Dsn, "dsn", "", "Database dsn")
-	dumpMysqlCmd.Flags().StringVar(&MY_Dest, "dest", "", "dest sql")
+	dumpMysqlCmd.Flags().String("dsn", "", "Database dsn")
+	dumpMysqlCmd.Flags().String("dest", "", "dest sql")
 	return dumpMysqlCmd
 }
 
@@ -66,18 +65,22 @@ func newSourceMysqlCmd() *cobra.Command {
 		Short: "source mysql db command",
 		Long:  "source mysql db command",
 		Args: func(cmd *cobra.Command, args []string) error {
-			if MY_Dsn == "" {
+			dns, _ := cmd.Flags().GetString("dsn")
+			if dns == "" {
 				return fmt.Errorf("missing dsn")
 			}
-			if MY_Source == "" {
+			dest, _ := cmd.Flags().GetString("dest")
+			if dest == "" {
 				return fmt.Errorf("missing dest")
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			f, _ := os.Open(MY_Source)
+			dest, _ := cmd.Flags().GetString("dest")
+			dns, _ := cmd.Flags().GetString("dsn")
+			f, _ := os.Open(dest)
 			_ = mysqldump.Source(
-				MY_Dsn, // DSN
+				dns, // DSN
 				f,
 				mysqldump.WithMergeInsert(1000), // Option: Merge insert 1000 (Default: Not merge insert)
 				mysqldump.WithDebug(),           // Option: Print execute sql (Default: Not print execute sql)
@@ -85,7 +88,7 @@ func newSourceMysqlCmd() *cobra.Command {
 			return nil
 		},
 	}
-	sourceMysqlCmd.Flags().StringVar(&MY_Dsn, "dsn", "", "Database dsn")
-	sourceMysqlCmd.Flags().StringVar(&MY_Source, "dest", "", "dest sql")
+	sourceMysqlCmd.Flags().String("dsn", "", "Database dsn")
+	sourceMysqlCmd.Flags().String("dest", "", "dest sql")
 	return sourceMysqlCmd
 }

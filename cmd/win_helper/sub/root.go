@@ -2,9 +2,7 @@ package sub
 
 import (
 	"fmt"
-	"os"
-
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -12,12 +10,7 @@ import (
 )
 
 var (
-	cfgFile     string
 	showVersion bool
-	verbose     bool
-
-	// 命令执行路径
-	baseDir string
 )
 
 func init() {
@@ -43,16 +36,16 @@ func newRootCmd() *cobra.Command {
 	}
 	rootCmd.PersistentFlags().BoolVarP(&showVersion, "version", "v", false, "version")
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.win_helper.yaml)")
-	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "show verbose output")
-	rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
-	_ = viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
+	rootCmd.PersistentFlags().Bool("verbose", false, "show verbose output")
+	_ = viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 
 	rootCmd.AddCommand(newMakeLinkCmd())
 	rootCmd.AddCommand(newObrCmd())
 	rootCmd.AddCommand(newServerCmd())
 	rootCmd.AddCommand(newInitCmd())
 	rootCmd.AddCommand(newMysqlCmd())
+	rootCmd.AddCommand(newWakeOnLan())
+	rootCmd.AddCommand(newWakeOnLanScan())
 	return rootCmd
 }
 
@@ -61,37 +54,13 @@ func Execute() error {
 	return newRootCmd().Execute()
 }
 
-func er(msg interface{}) {
-	fmt.Println("Error:", msg)
-	os.Exit(1)
-}
-
-func showMessage(msg interface{}) {
-	if verbose {
-		fmt.Println(msg)
-	}
-}
-
 func initConfig() {
-	baseDir, _ = os.Getwd()
-	showMessage(fmt.Sprintf("baseDir : %s", baseDir))
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			er(err)
-		}
-
-		// Search config in home directory with name ".cobra" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".win_helper")
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Printf("Error loading .env file: %v\n", err)
 	}
-
+	viper.SetEnvPrefix("WH")
+	//baseDir, _ := os.Getwd()
+	//viper.Set("BASE_DIR", baseDir)
 	viper.AutomaticEnv()
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
 }

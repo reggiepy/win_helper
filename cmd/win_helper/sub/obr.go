@@ -2,6 +2,7 @@ package sub
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"win_helper/pkg/obr/app"
@@ -38,6 +39,7 @@ func newObrVersionCmd() *cobra.Command {
 		Long:  `handle app version.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
+			baseDir, _ := os.Getwd()
 			v := app.NewVersion(
 				app.WithMessage(gitMessage),
 				app.WithVersion(gitVersion),
