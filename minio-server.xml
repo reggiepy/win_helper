@@ -1,0 +1,9 @@
+<service>
+    <id>minio</id>
+    <executable>minio.exe</executable>
+    <name>minio</name>
+    <description>minio</description>
+    <logpath>logs</logpath>
+    <startarguments>server minio</startarguments>
+    <log mode="roll"></log>
+</service>

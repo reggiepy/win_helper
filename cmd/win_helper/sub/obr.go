@@ -2,33 +2,52 @@ package sub
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
+	"os"
+	"path/filepath"
 	"win_helper/pkg/obr/app"
+	"win_helper/pkg/obr/git"
+	"win_helper/pkg/obr/iss"
+	"win_helper/pkg/util/versionUtils/manager"
 )
 
-var (
-	// 控制命令是否执行
-	pushTag           bool
-	replaceIssVersion bool
+type OBRUpdateAppCmdConfig struct {
+	IssPath string
+	Version string
 
-	gitMessage string
-	gitVersion string
-	issPath    string
+	PushGit    bool
+	GitMessage string
+}
+
+type OBRUpdateISSCmdConfig struct {
+	IssPath string
+	Version string
+
+	PushGit    bool
+	GitMessage string
+}
+
+var (
+	obrUpdateISSCmdConfig = &OBRUpdateISSCmdConfig{}
+	obrUpdateAppCmdConfig = &OBRUpdateAppCmdConfig{}
 )
 
 func init() {
 	rootCmd.AddCommand(obrCmd)
-	obrCmd.AddCommand(obrVersionCmd)
+	obrCmd.AddCommand(updateAppCmd)
+	obrCmd.AddCommand(updateISSCmd)
 
-	obrVersionCmd.Flags().StringVarP(&gitVersion, "version", "v", "+", "git version message")
+	updateISSCmd.Flags().StringVarP(&obrUpdateISSCmdConfig.Version, "version", "v", "+", "git version message")
+	updateISSCmd.Flags().StringVarP(&obrUpdateISSCmdConfig.IssPath, "iss-path", "", "C:\\dist\\chemical_server.iss", "iss_path")
 
-	obrVersionCmd.Flags().BoolVarP(&pushTag, "push-tag", "", false, "push tag")
-	obrVersionCmd.Flags().StringVarP(&gitMessage, "message", "m", "new version", "git version message")
+	updateISSCmd.Flags().BoolVar(&obrUpdateISSCmdConfig.PushGit, "push-git", false, "push git tag")
+	updateISSCmd.Flags().StringVar(&obrUpdateISSCmdConfig.GitMessage, "git-message", "", "git version message")
 
-	obrVersionCmd.Flags().BoolVarP(&replaceIssVersion, "replace-iss-version", "", false, "replace iss version")
-	obrVersionCmd.Flags().StringVarP(&issPath, "iss-path", "", "C:\\dist\\chemical_server.iss", "iss_path")
+	updateAppCmd.Flags().StringVarP(&obrUpdateAppCmdConfig.Version, "version", "v", "+", "git version message")
+	updateAppCmd.Flags().StringVarP(&obrUpdateAppCmdConfig.IssPath, "iss-path", "", "C:\\dist\\chemical_server.iss", "iss_path")
+
+	updateAppCmd.Flags().BoolVarP(&obrUpdateAppCmdConfig.PushGit, "push-git", "", false, "push git tag")
+	updateAppCmd.Flags().StringVarP(&obrUpdateAppCmdConfig.GitMessage, "git-message", "m", "", "git version message")
 }
 
 var obrCmd = &cobra.Command{
@@ -41,45 +60,104 @@ var obrCmd = &cobra.Command{
 	},
 }
 
-var obrVersionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "handle app version",
-	Long:  `handle app version.`,
+// 更新 ISS 版本号子命令
+var updateISSCmd = &cobra.Command{
+	Use:   "update-iss",
+	Short: "Update ISS version",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var err error
-		baseDir, _ := os.Getwd()
-		v := app.NewVersion(
-			app.WithMessage(gitMessage),
-			app.WithVersion(gitVersion),
-			app.WithVersionDir(baseDir),
-			app.WithIssPath(issPath),
-		)
-		currentVersion, err := v.CurrentVersion()
+		// 获取当前目录
+		originalDir, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("error getting current directory: %v", err)
+		}
+		fmt.Println("Current directory:", originalDir)
+
+		// 获取绝对路径
+		issDir := filepath.Dir(obrUpdateISSCmdConfig.IssPath)
+		fmt.Println("Changing to ISS directory:", issDir)
+
+		// 切换到 ISS 文件所在目录
+		if err := os.Chdir(issDir); err != nil {
+			return fmt.Errorf("error changing directory: %v", err)
+		}
+
+		// 你的更新 ISS 版本的逻辑
+		fmt.Println("ISS version updated.")
+
+		version, err := iss.GetCurrentVersion(obrUpdateISSCmdConfig.IssPath)
 		if err != nil {
 			return err
 		}
-		nowVersion, err := v.GetVersion()
-		if err != nil {
-			return err
+		versionManager := manager.NewVersionManager(manager.WithVersion(version))
+		currentVersion := versionManager.GetVersion()
+
+		if err := versionManager.SetVersion(obrUpdateISSCmdConfig.Version); err != nil {
+			return fmt.Errorf("error updating version: %v", err)
 		}
-		fmt.Printf("%s ---> %s\n", currentVersion, nowVersion)
-		if pushTag {
-			err = v.HandleTag()
-			if err != nil {
-				fmt.Printf("处理tag异常: %v\n", err)
+		newVersion := versionManager.GetVersion()
+		fmt.Printf("update version %s ---> %s", currentVersion, newVersion)
+		if err := iss.SaveVersion(newVersion, obrUpdateISSCmdConfig.IssPath); err != nil {
+			return fmt.Errorf("error saving version: %v", err)
+		}
+
+		if obrUpdateISSCmdConfig.PushGit {
+			commitMessage := fmt.Sprintf("update version %s --> %s", currentVersion, newVersion)
+			if obrUpdateISSCmdConfig.GitMessage != "" {
+				commitMessage = obrUpdateISSCmdConfig.GitMessage
+			}
+			if err := git.CommitChanges(commitMessage); err != nil {
+				return err
+			}
+			if err := git.TagAndPush(newVersion, obrUpdateISSCmdConfig.GitMessage); err != nil {
+				return err
 			}
 		}
-		// 替换 iss version
-		if replaceIssVersion {
-			err = v.ReplaceIssVersion()
-			if err != nil {
-				fmt.Printf("替换iss版本异常: %v\n", err)
-			}
+
+		// 切换回原始目录
+		if err := os.Chdir(originalDir); err != nil {
+			return fmt.Errorf("error changing back to original directory: %v", err)
 		}
-		err = v.SaveVersion()
+		return nil
+	},
+}
+
+// 更新 App 版本号子命令
+var updateAppCmd = &cobra.Command{
+	Use:   "update-app",
+	Short: "Update App version",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		originalDir, err := os.Getwd()
 		if err != nil {
-			fmt.Printf("保存版本文件异常: %v\n", err)
+			return fmt.Errorf("error getting current directory: %v", err)
+		}
+		version, err := app.GetCurrentVersion(originalDir)
+		if err != nil {
 			return err
+		}
+		versionManager := manager.NewVersionManager(manager.WithVersion(version))
+		currentVersion := versionManager.GetVersion()
+
+		if err := versionManager.SetVersion(obrUpdateAppCmdConfig.Version); err != nil {
+			return fmt.Errorf("error updating version: %v", err)
+		}
+		newVersion := versionManager.GetVersion()
+		fmt.Printf("update version %s ---> %s", currentVersion, newVersion)
+		versionFile := filepath.Join(originalDir, "VERSION")
+		if err := versionManager.SaveAs(versionFile, true); err != nil {
+			return fmt.Errorf("error saving version: %v", err)
+		}
+
+		if obrUpdateAppCmdConfig.PushGit {
+			commitMessage := fmt.Sprintf("update version %s --> %s", currentVersion, newVersion)
+			if obrUpdateAppCmdConfig.GitMessage != "" {
+				commitMessage = obrUpdateAppCmdConfig.GitMessage
+			}
+			if err := git.CommitChanges(commitMessage); err != nil {
+				return err
+			}
+			if err := git.TagAndPush(newVersion, obrUpdateISSCmdConfig.GitMessage); err != nil {
+				return err
+			}
 		}
 		return nil
 	},

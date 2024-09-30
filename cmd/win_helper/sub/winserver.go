@@ -2,60 +2,62 @@ package sub
 
 import (
 	"fmt"
+	"win_helper/pkg/server"
 
 	"github.com/spf13/cobra"
-	"win_helper/pkg/server/win"
 )
 
-var (
-	sForce bool
 
-	sId                     string
-	sExecutable             string
-	sName                   string
-	sDescription            string
-	sStartMode              string
-	sDepends                string
-	sLogPath                string
-	sArguments              string
-	sStartArguments         string
-	sStopExecutable         string
-	sStopArguments          string
-	sEnv                    string
-	sFailure                string
-	sWorkingDirectory       string
-	sLogMode                string
-	sLogPattern             string
-	sLogAutoRollAtTime      string
-	sLogSizeThreshold       string
-	sLogZipOlderThanNumDays string
-	sLogZipDateFormat       string
-)
+type WinServiceConfig struct {
+	Force                  bool
+	ID                     string
+	Executable             string
+	Name                   string
+	Description            string
+	StartMode              string
+	Depends                string
+	LogPath                string
+	Arguments              string
+	StartArguments         string
+	StopExecutable         string
+	StopArguments          string
+	Env                    string
+	Failure                string
+	WorkingDirectory       string
+	LogMode                string
+	LogPattern             string
+	LogAutoRollAtTime      string
+	LogSizeThreshold       string
+	LogZipOlderThanNumDays string
+	LogZipDateFormat       string
+}
+
+var serverConfig = WinServiceConfig{}
 
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	serverCmd.Flags().StringVar(&sId, "id", "", "Id(default=name)")
-	serverCmd.Flags().StringVar(&sName, "name", "", "name")
-	serverCmd.Flags().StringVar(&sExecutable, "executable", "", "executable")
-	serverCmd.Flags().StringVar(&sDescription, "description", "", "description")
-	serverCmd.Flags().StringVar(&sStartMode, "start-mode", "", "start-mode(Boot|System|Automatic|Manual|Disabled) (default: Automatic)")
-	serverCmd.Flags().StringVar(&sDepends, "depends", "", "depends")
-	serverCmd.Flags().StringVar(&sLogPath, "log-path", "logs", "log path")
-	serverCmd.Flags().StringVar(&sArguments, "arguments", "", "arguments")
-	serverCmd.Flags().StringVar(&sStartArguments, "start-arguments", "", "start arguments")
-	serverCmd.Flags().StringVar(&sStopExecutable, "stop-executable", "", "stop executable")
-	serverCmd.Flags().StringVar(&sStopArguments, "stop-arguments", "", "stop arguments")
-	serverCmd.Flags().StringVar(&sEnv, "env", "", "environment variables")
-	serverCmd.Flags().StringVar(&sFailure, "failure", "", "failure")
-	serverCmd.Flags().StringVar(&sWorkingDirectory, "working-directory", "", "working directory")
-	serverCmd.Flags().StringVar(&sLogMode, "log-mode", "roll", "log mode")
-	serverCmd.Flags().StringVar(&sLogPattern, "log-pattern", "", "log pattern")
-	serverCmd.Flags().StringVar(&sLogAutoRollAtTime, "log-auto-roll-at-time", "", "log auto roll at time")
-	serverCmd.Flags().StringVar(&sLogSizeThreshold, "log-size-threshold", "", "log size threshold")
-	serverCmd.Flags().StringVar(&sLogZipOlderThanNumDays, "log-zip-older-than-num-days", "", "log zip older than num days")
-	serverCmd.Flags().StringVar(&sLogZipDateFormat, "log-zip-date-format", "", "log zip date format")
-	serverCmd.Flags().BoolVar(&sForce, "force", true, "force write")
+	serverCmd.Flags().StringVar(&serverConfig.ID, "id", "", "Id(default=name)")
+	serverCmd.Flags().StringVar(&serverConfig.Name, "name", "", "name")
+	serverCmd.Flags().StringVar(&serverConfig.Executable, "executable", "", "executable")
+	serverCmd.Flags().StringVar(&serverConfig.Description, "description", "", "description")
+	serverCmd.Flags().StringVar(&serverConfig.StartMode, "start-mode", "", "start-mode(Boot|System|Automatic|Manual|Disabled) (default: Automatic)")
+	serverCmd.Flags().StringVar(&serverConfig.Depends, "depends", "", "depends")
+	serverCmd.Flags().StringVar(&serverConfig.LogPath, "log-path", "logs", "log path")
+	serverCmd.Flags().StringVar(&serverConfig.Arguments, "arguments", "", "arguments")
+	serverCmd.Flags().StringVar(&serverConfig.StartArguments, "start-arguments", "", "start arguments")
+	serverCmd.Flags().StringVar(&serverConfig.StopExecutable, "stop-executable", "", "stop executable")
+	serverCmd.Flags().StringVar(&serverConfig.StopArguments, "stop-arguments", "", "stop arguments")
+	serverCmd.Flags().StringVar(&serverConfig.Env, "env", "", "environment variables")
+	serverCmd.Flags().StringVar(&serverConfig.Failure, "failure", "", "failure")
+	serverCmd.Flags().StringVar(&serverConfig.WorkingDirectory, "working-directory", "", "working directory")
+	serverCmd.Flags().StringVar(&serverConfig.LogMode, "log-mode", "roll", "log mode")
+	serverCmd.Flags().StringVar(&serverConfig.LogPattern, "log-pattern", "", "log pattern")
+	serverCmd.Flags().StringVar(&serverConfig.LogAutoRollAtTime, "log-auto-roll-at-time", "", "log auto roll at time")
+	serverCmd.Flags().StringVar(&serverConfig.LogSizeThreshold, "log-size-threshold", "", "log size threshold")
+	serverCmd.Flags().StringVar(&serverConfig.LogZipOlderThanNumDays, "log-zip-older-than-num-days", "", "log zip older than num days")
+	serverCmd.Flags().StringVar(&serverConfig.LogZipDateFormat, "log-zip-date-format", "", "log zip date format")
+	serverCmd.Flags().BoolVar(&serverConfig.Force, "force", true, "force write")
 
 	// Boot Start ("Boot")
 	// Device driver started by the operating system loader. This value is valid only for driver services.
@@ -74,42 +76,45 @@ var serverCmd = &cobra.Command{
 	Short: "generate exe file's windows server",
 	Long:  `generate exe file's windows server`,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if sName == "" {
+		if serverConfig.Name == "" {
 			return fmt.Errorf("missing name")
 		}
-		if sId == "" {
-			sId = sName
+		if serverConfig.ID == "" {
+			serverConfig.ID = serverConfig.Name
 		}
-		if sExecutable == "" {
+		if serverConfig.Executable == "" {
 			return fmt.Errorf("missing executable")
 		}
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		s := win.NewServer(
-			win.WithSId(sId),
-			win.WithSName(sName),
-			win.WithSExecutable(sExecutable),
-			win.WithSDescription(sDescription),
-			win.WithSStartMode(sStartMode),
-			win.WithSDepends(sDepends),
-			win.WithSLogPath(sLogPath),
-			win.WithSArguments(sArguments),
-			win.WithSStartArguments(sStartArguments),
-			win.WithSStopExecutable(sStopExecutable),
-			win.WithSStopArguments(sStopArguments),
-			win.WithSEnv(sEnv),
-			win.WithSFailure(sFailure),
-			win.WithSWorkingDirectory(sWorkingDirectory),
-			win.WithSLogMode(sLogMode),
-			win.WithSLogPattern(sLogPattern),
-			win.WithSLogAutoRollAtTime(sLogAutoRollAtTime),
-			win.WithSLogSizeThreshold(sLogSizeThreshold),
-			win.WithSLogZipOlderThanNumDays(sLogZipOlderThanNumDays),
-			win.WithSLogZipDateFormat(sLogZipDateFormat),
-			win.WithSForce(sForce),
+		s, err := server.NewServer(
+			server.WithSId(serverConfig.ID),
+			server.WithSName(serverConfig.Name),
+			server.WithSExecutable(serverConfig.Executable),
+			server.WithSDescription(serverConfig.Description),
+			server.WithSStartMode(serverConfig.StartMode),
+			server.WithSDepends(serverConfig.Depends),
+			server.WithSLogPath(serverConfig.LogPath),
+			server.WithSArguments(serverConfig.Arguments),
+			server.WithSStartArguments(serverConfig.StartArguments),
+			server.WithSStopExecutable(serverConfig.StopExecutable),
+			server.WithSStopArguments(serverConfig.StopArguments),
+			server.WithSEnv(serverConfig.Env),
+			server.WithSFailure(serverConfig.Failure),
+			server.WithSWorkingDirectory(serverConfig.WorkingDirectory),
+			server.WithSLogMode(serverConfig.LogMode),
+			server.WithSLogPattern(serverConfig.LogPattern),
+			server.WithSLogAutoRollAtTime(serverConfig.LogAutoRollAtTime),
+			server.WithSLogSizeThreshold(serverConfig.LogSizeThreshold),
+			server.WithSLogZipOlderThanNumDays(serverConfig.LogZipOlderThanNumDays),
+			server.WithSLogZipDateFormat(serverConfig.LogZipDateFormat),
+			server.WithSForce(serverConfig.Force),
 		)
-		err := s.Run()
+		if err != nil {
+			return err
+		}
+		err = s.Generate()
 		if err != nil {
 			return err
 		}

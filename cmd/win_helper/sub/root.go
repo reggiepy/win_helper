@@ -10,11 +10,17 @@ import (
 	"win_helper/pkg/util/version"
 )
 
-var showVersion bool
+type RootConfig struct {
+	showVersion bool
+}
+
+var rootConfig = RootConfig{
+
+}
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().BoolVarP(&showVersion, "version", "v", false, "version")
+	rootCmd.PersistentFlags().BoolVarP(&rootConfig.showVersion, "version", "v", false, "version")
 
 	rootCmd.PersistentFlags().Bool("verbose", false, "show verbose output")
 	_ = viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
@@ -28,7 +34,7 @@ var rootCmd = &cobra.Command{
 		return
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if showVersion {
+		if rootConfig.showVersion {
 			fmt.Println(version.Full())
 			return nil
 		}
