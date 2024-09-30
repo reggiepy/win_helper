@@ -49,6 +49,8 @@ func adjustVersion(proto, major, minor int, op string) (int, int, int, error) {
 		minor++
 	case "-": // 减少次版本号
 		minor--
+	case "=", "==", "===": // 减少次版本号
+
 	default:
 		return proto, major, minor, fmt.Errorf("invalid version operation: %s", op)
 	}
