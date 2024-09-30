@@ -155,7 +155,8 @@ var updateAppCmd = &cobra.Command{
 			if err := git.CommitChanges(commitMessage); err != nil {
 				return err
 			}
-			if err := git.TagAndPush(newVersion, obrUpdateISSCmdConfig.GitMessage); err != nil {
+			tagName := "v" + newVersion
+			if err := git.TagAndPush(tagName, obrUpdateISSCmdConfig.GitMessage); err != nil {
 				return err
 			}
 		}
