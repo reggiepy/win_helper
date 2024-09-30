@@ -7,29 +7,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
 type WinServiceConfig struct {
-	Force                  bool
-	ID                     string
-	Executable             string
-	Name                   string
-	Description            string
-	StartMode              string
-	Depends                string
-	LogPath                string
-	Arguments              string
-	StartArguments         string
-	StopExecutable         string
-	StopArguments          string
-	Env                    string
-	Failure                string
-	WorkingDirectory       string
-	LogMode                string
-	LogPattern             string
-	LogAutoRollAtTime      string
-	LogSizeThreshold       string
-	LogZipOlderThanNumDays string
-	LogZipDateFormat       string
+	Force             bool
+	ID                string
+	Executable        string
+	Name              string
+	Description       string
+	StartMode         string
+	Depends           []string
+	LogPath           string
+	Arguments         string
+	StartArguments    string
+	StopExecutable    string
+	StopArguments     string
+	Env               []string
+	Failure           string
+	WorkingDirectory  string
+	LogMode           string
+	LogPattern        string
+	LogAutoRollAtTime string
+	LogSizeThreshold  int
+	LogKeepFiles      int
 }
 
 var serverConfig = WinServiceConfig{}
@@ -42,21 +40,20 @@ func init() {
 	serverCmd.Flags().StringVar(&serverConfig.Executable, "executable", "", "executable")
 	serverCmd.Flags().StringVar(&serverConfig.Description, "description", "", "description")
 	serverCmd.Flags().StringVar(&serverConfig.StartMode, "start-mode", "", "start-mode(Boot|System|Automatic|Manual|Disabled) (default: Automatic)")
-	serverCmd.Flags().StringVar(&serverConfig.Depends, "depends", "", "depends")
+	serverCmd.Flags().StringSliceVar(&serverConfig.Depends, "depends", []string{}, "depends")
 	serverCmd.Flags().StringVar(&serverConfig.LogPath, "log-path", "logs", "log path")
 	serverCmd.Flags().StringVar(&serverConfig.Arguments, "arguments", "", "arguments")
 	serverCmd.Flags().StringVar(&serverConfig.StartArguments, "start-arguments", "", "start arguments")
 	serverCmd.Flags().StringVar(&serverConfig.StopExecutable, "stop-executable", "", "stop executable")
 	serverCmd.Flags().StringVar(&serverConfig.StopArguments, "stop-arguments", "", "stop arguments")
-	serverCmd.Flags().StringVar(&serverConfig.Env, "env", "", "environment variables")
+	serverCmd.Flags().StringSliceVarP(&serverConfig.Env, "env", "e", []string{}, "environment variables like 'KEY=VALUE'")
 	serverCmd.Flags().StringVar(&serverConfig.Failure, "failure", "", "failure")
 	serverCmd.Flags().StringVar(&serverConfig.WorkingDirectory, "working-directory", "", "working directory")
-	serverCmd.Flags().StringVar(&serverConfig.LogMode, "log-mode", "roll", "log mode")
+	serverCmd.Flags().StringVar(&serverConfig.LogMode, "log-mode", "roll-by-size", "log mode")
 	serverCmd.Flags().StringVar(&serverConfig.LogPattern, "log-pattern", "", "log pattern")
 	serverCmd.Flags().StringVar(&serverConfig.LogAutoRollAtTime, "log-auto-roll-at-time", "", "log auto roll at time")
-	serverCmd.Flags().StringVar(&serverConfig.LogSizeThreshold, "log-size-threshold", "", "log size threshold")
-	serverCmd.Flags().StringVar(&serverConfig.LogZipOlderThanNumDays, "log-zip-older-than-num-days", "", "log zip older than num days")
-	serverCmd.Flags().StringVar(&serverConfig.LogZipDateFormat, "log-zip-date-format", "", "log zip date format")
+	serverCmd.Flags().IntVar(&serverConfig.LogSizeThreshold, "log-size-threshold", 1024, "the rotation threshold in KB (defaults to 1MB)")
+	serverCmd.Flags().IntVar(&serverConfig.LogKeepFiles, "log-keep-files", 2, "rolled files to keep (defaults to 2.)")
 	serverCmd.Flags().BoolVar(&serverConfig.Force, "force", true, "force write")
 
 	// Boot Start ("Boot")
@@ -107,8 +104,7 @@ var serverCmd = &cobra.Command{
 			server.WithSLogPattern(serverConfig.LogPattern),
 			server.WithSLogAutoRollAtTime(serverConfig.LogAutoRollAtTime),
 			server.WithSLogSizeThreshold(serverConfig.LogSizeThreshold),
-			server.WithSLogZipOlderThanNumDays(serverConfig.LogZipOlderThanNumDays),
-			server.WithSLogZipDateFormat(serverConfig.LogZipDateFormat),
+			server.WithSLogKeepFiles(serverConfig.LogKeepFiles),
 			server.WithSForce(serverConfig.Force),
 		)
 		if err != nil {

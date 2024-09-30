@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -8,8 +9,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
 	"win_helper/pkg/util/fileUtils"
-	"win_helper/templates"
 )
 
 type ServerXML struct {
@@ -79,7 +80,7 @@ type ServerXML struct {
 	// StopTimeout
 	StopTimeout string `xml:"stoptimeout,omitempty" json:"stoptimeout,omitempty"`
 	// 环境
-	Env *Env `xml:"env,omitempty" json:"env,omitempty"`
+	Env []*Env `xml:"env,omitempty" json:"env,omitempty"`
 	// 哔哔关门
 	// 可选元素用于在服务关闭时发出简单的提示音。 此功能应仅用于调试，因为某些操作系统和硬件不支持此功能。
 	BeepOnShutdown bool `xml:"beeponshutdown,omitempty" json:"beeponshutdown,omitempty"`
@@ -113,7 +114,8 @@ type Log struct {
 	Mode                string `xml:"mode,attr" json:"mode"`
 	Pattern             string `xml:"pattern,omitempty" json:"pattern,omitempty"`
 	AutoRollAtTime      string `xml:"autoRollAtTime,omitempty" json:"autoRollAtTime,omitempty"`
-	SizeThreshold       string `xml:"sizeThreshold,omitempty" json:"sizeThreshold,omitempty"`
+	SizeThreshold       int    `xml:"sizeThreshold,omitempty" json:"sizeThreshold,omitempty"`
+	KeepFiles           int    `xml:"keepFiles,omitempty" json:"keepFiles,omitempty"`
 	ZipOlderThanNumDays string `xml:"zipOlderThanNumDays,omitempty" json:"zipOlderThanNumDays,omitempty"`
 	ZipDateFormat       string `xml:"zipDateFormat,omitempty" json:"zipDateFormat,omitempty"`
 }
@@ -121,6 +123,40 @@ type Log struct {
 type Dependency struct {
 	XMLName xml.Name `xml:"depend,omitempty" json:"-"`
 	Value   string   `xml:",chardata" json:"value"`
+}
+
+func (s *ServerXML) ToJson() string {
+	data, _ := json.Marshal(s)
+	return string(data)
+}
+
+func (s *ServerXML) LoadJson(data string) (*ServerXML, error) {
+	err := json.Unmarshal([]byte(data), s)
+	if err != nil {
+		return nil, fmt.Errorf("parse json error: %v", err)
+	}
+	return s, nil
+}
+
+func (s *ServerXML) ToXML() (string, error) {
+	var b bytes.Buffer
+	encoder := xml.NewEncoder(&b)
+	encoder.Indent("", "    ")
+
+	// 处理编码错误，返回错误信息
+	if err := encoder.Encode(s); err != nil {
+		return "", fmt.Errorf("XML 编码失败: %v", err)
+	}
+
+	return b.String(), nil
+}
+
+func (s *ServerXML) LoadXML(data string) (*ServerXML, error){
+	err := xml.Unmarshal([]byte(data), s)
+	if err != nil {
+		return nil, fmt.Errorf("parse json error: %v", err)
+	}
+	return s, nil
 }
 
 type Server struct {
@@ -132,22 +168,21 @@ type Server struct {
 	SName             string
 	SDescription      string
 	SStartMode        string
-	SDepends          string
+	SDepends          []string
 	SLogPath          string
 	SArguments        string
 	SStartArguments   string
 	SStopExecutable   string
 	SStopArguments    string
-	SEnv              string
+	SEnv              []string
 	SFailure          string
 	SWorkingDirectory string
 
-	SLogMode                string
-	SLogPattern             string
-	SLogAutoRollAtTime      string
-	SLogSizeThreshold       string
-	SLogZipOlderThanNumDays string
-	SLogZipDateFormat       string
+	SLogMode           string
+	SLogPattern        string
+	SLogAutoRollAtTime string
+	SLogSizeThreshold  int
+	SLogKeepFiles      int
 }
 
 func NewDefaultServer() *Server {
@@ -179,7 +214,7 @@ func (s *Server) GenerateServer() error {
 			return fmt.Errorf("服务文件 %s 已存在", filename)
 		}
 	}
-	err := os.WriteFile(filename, templates.WinSW, 0o644)
+	err := os.WriteFile(filename, WinSW, 0o644)
 	if err != nil {
 		return fmt.Errorf("写入服务失败。%v", err)
 	}
@@ -197,74 +232,84 @@ func (s *Server) GenerateServerXML() error {
 		},
 	}
 
-	if s.SArguments != "" {
-		serverXML.Arguments = s.SArguments
-	}
-	if s.SStartArguments != "" {
-		serverXML.StartArguments = s.SStartArguments
-	}
-	if s.SStopExecutable != "" {
-		serverXML.StopExecutable = s.SStopExecutable
-	}
-	if s.SStopArguments != "" {
-		serverXML.StopArguments = s.SStopArguments
+	// 简化参数检查逻辑
+	serverXML.Arguments = s.SArguments
+	serverXML.StartArguments = s.SStartArguments
+	serverXML.StopExecutable = s.SStopExecutable
+	serverXML.StopArguments = s.SStopArguments
+	serverXML.LogPath = s.SLogPath
+
+	// 使用字典处理模式匹配
+	logModeMap := map[string]func(){
+		"append": func() { serverXML.Log.Mode = "append" },
+		"reset":  func() { serverXML.Log.Mode = "reset" },
+		"none":   func() { serverXML.Log.Mode = "none" },
+		"roll-by-size": func() {
+			serverXML.Log.Mode = "roll-by-size"
+			serverXML.Log.SizeThreshold = s.SLogSizeThreshold
+			serverXML.Log.KeepFiles = s.SLogKeepFiles
+		},
+		"roll-by-time": func() {
+			serverXML.Log.Mode = "roll-by-time"
+			serverXML.Log.Pattern = s.SLogPattern
+		},
+		"roll-by-size-time": func() {
+			serverXML.Log.Mode = "roll-by-time"
+			serverXML.Log.Pattern = s.SLogPattern
+			serverXML.Log.SizeThreshold = s.SLogSizeThreshold
+			serverXML.Log.KeepFiles = s.SLogKeepFiles
+			serverXML.Log.AutoRollAtTime = s.SLogAutoRollAtTime
+		},
 	}
 
-	if s.SLogPath != "" {
-		serverXML.LogPath = s.SLogPath
-	}
-	switch s.SLogMode {
-	case "append":
-		serverXML.Log.Mode = "append"
-	case "reset":
-		serverXML.Log.Mode = "reset"
-	case "none":
-		serverXML.Log.Mode = "none"
-	case "roll":
-		serverXML.Log.Mode = "roll"
-	case "roll-by-size":
-		serverXML.Log.Mode = "roll-by-size"
-
-	case "roll-by-time":
-		serverXML.Log.Mode = "roll-by-time"
-		serverXML.Log.Pattern = s.SLogPattern
-		serverXML.Log.SizeThreshold = s.SLogSizeThreshold
-		serverXML.Log.AutoRollAtTime = s.SLogAutoRollAtTime
+	// 根据模式选择对应的处理逻辑
+	if setLogMode, exists := logModeMap[s.SLogMode]; exists {
+		setLogMode()
 	}
 
-	if s.SStopExecutable != "" {
-		serverXML.StopExecutable = s.SStopExecutable
-	}
-
-	depends := strings.Split(s.SDepends, ",")
-	if len(depends) > 1 || (len(depends) == 1 && depends[0] != "") {
-		// 存在依赖项
-		serverXML.Dependencies = make([]*Dependency, len(depends))
-		for _, d := range depends {
+	// 处理依赖项
+	for _, d := range s.SDepends {
+		if d != "" {
 			serverXML.Dependencies = append(serverXML.Dependencies, &Dependency{Value: d})
 		}
 	}
 
-	if jsonData, err := json.Marshal(serverXML); err == nil {
-		fmt.Println(string(jsonData))
+	for _, e := range s.SEnv {
+		if e != "" {
+			eSplit := strings.SplitN(e, "=", 2)
+			if len(eSplit) != 2 {
+				continue
+			}
+			k, v := eSplit[0], eSplit[1]
+			serverXML.Env = append(serverXML.Env, &Env{k, v})
+		}
 	}
+
+	// 输出调试信息（可选）
+	fmt.Println(serverXML.ToJson())
+
+	// 生成文件路径
 	filename := filepath.Join(s.BasePath, fmt.Sprintf("%s-server.xml", s.SName))
+
+	// 检查文件是否存在并根据强制标志删除
 	if fileUtils.FileExist(filename) {
 		if s.sForce {
-			err := os.Remove(filename)
-			if err != nil {
+			if err := os.Remove(filename); err != nil {
 				return fmt.Errorf("删除服务文件失败: %v", err)
 			}
 		} else {
 			return fmt.Errorf("服务文件 %s 已存在", filename)
 		}
 	}
+
+	// 创建并写入 XML 文件
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
+	// 编码 XML 并写入文件
 	encoder := xml.NewEncoder(file)
 	encoder.Indent("", "    ")
 	if err := encoder.Encode(serverXML); err != nil {

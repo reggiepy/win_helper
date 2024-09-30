@@ -44,7 +44,7 @@ func WithSStartMode(startMode string) Option {
 	}
 }
 
-func WithSDepends(depends string) Option {
+func WithSDepends(depends []string) Option {
 	return func(s *Server) error {
 		s.SDepends = depends
 		return nil
@@ -86,7 +86,7 @@ func WithSStopArguments(stopArguments string) Option {
 	}
 }
 
-func WithSEnv(env string) Option {
+func WithSEnv(env []string) Option {
 	return func(s *Server) error {
 		s.SEnv = env
 		return nil
@@ -128,23 +128,16 @@ func WithSLogAutoRollAtTime(autoRollAtTime string) Option {
 	}
 }
 
-func WithSLogSizeThreshold(sizeThreshold string) Option {
+func WithSLogSizeThreshold(sizeThreshold int) Option {
 	return func(s *Server) error {
 		s.SLogSizeThreshold = sizeThreshold
 		return nil
 	}
 }
 
-func WithSLogZipOlderThanNumDays(zipOlderThanNumDays string) Option {
+func WithSLogKeepFiles(logKeepFiles int) Option {
 	return func(s *Server) error {
-		s.SLogZipOlderThanNumDays = zipOlderThanNumDays
-		return nil
-	}
-}
-
-func WithSLogZipDateFormat(zipDateFormat string) Option {
-	return func(s *Server) error {
-		s.SLogZipDateFormat = zipDateFormat
+		s.SLogKeepFiles = logKeepFiles
 		return nil
 	}
 }

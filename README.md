@@ -38,6 +38,8 @@ win_helper.exe winserver-gen --name nsqlookupd --executable nsqlookupd.exe --des
 win_helper.exe winserver-gen --name nsq-auth --executable nsq-auth.exe --description nsq-auth --start-arguments "--secret %n&yFA2JD85z^g --auth-http-address 127.0.0.1:1325" --working-directory bin
 win_helper.exe winserver-gen --name nsqd --executable nsqd.exe --description nsqd --start-arguments "--lookupd-tcp-address=127.0.0.1:4160 --auth-http-address "127.0.0.1:1325"" --working-directory bin
 win_helper.exe winserver-gen --name nsqadmin --executable nsqadmin.exe --description nsqadmin --start-arguments "--lookupd-http-address=127.0.0.1:4161 -u "127.0.0.1:1325"" --working-directory bin
+
+win_helper.exe winserver-gen --name minio --executable minio.exe --description minio --start-arguments "server minio"
 ```
 ## Architecture
 ```bash

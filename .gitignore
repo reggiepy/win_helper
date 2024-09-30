@@ -16,4 +16,4 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 .idea/
-!WinSW-x64.exe
+!pkg/server/WinSW-x64.exe
