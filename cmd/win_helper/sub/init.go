@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/flosch/pongo2/v6"
@@ -65,8 +66,13 @@ var initProjectCmd = &cobra.Command{
 	Short: "init project directory。 生成",
 	Long:  `init project directory`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// 将相对路径转换为绝对路径
+		absPath, err := filepath.Abs(initProjectConfig.Directory)
+		if err != nil {
+			return err
+		}
 		p := project.NewProject(
-			project.WithBaseDir(initProjectConfig.Directory),
+			project.WithBaseDir(absPath),
 			project.WithIsGenLanguageDir(initProjectConfig.Language),
 		)
 		p.CreateProjectDirs()
@@ -96,21 +102,7 @@ var initReadmeCmd = &cobra.Command{
 	Short: "init readme",
 	Args:  validateInitReadmeCmd,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var shields []Shield
-		for _, shield := range initReadmeConfig.Shields {
-			if shield == "" {
-				continue
-			}
-			shieldsSplit := strings.Split(shield, "|")
-			if len(shieldsSplit) != 3 {
-				fmt.Printf("Invalid shield: %s", shield)
-				continue
-			}
-			name, value, description := shieldsSplit[0], shieldsSplit[1], shieldsSplit[2]
-			escapedValue := url.PathEscape(value)
-			escapedName := url.PathEscape(name)
-			shields = append(shields, Shield{Name: escapedName, Value: escapedValue, Description: description})
-		}
+		shields := ParseShieldString(initReadmeConfig.Shields)
 		tplExample := pongo2.Must(pongo2.FromBytes(templates.ReadmeTemplate))
 
 		out, err := tplExample.ExecuteBytes(pongo2.Context{
@@ -152,6 +144,25 @@ var initReadmeCmd = &cobra.Command{
 		}
 		return nil
 	},
+}
+
+func ParseShieldString(shieldString []string) []Shield {
+	var shields []Shield
+	for _, shield := range shieldString {
+		if shield == "" {
+			continue
+		}
+		shieldsSplit := strings.Split(shield, "|")
+		if len(shieldsSplit) != 3 {
+			fmt.Printf("Invalid shield: %s", shield)
+			continue
+		}
+		name, value, description := shieldsSplit[0], shieldsSplit[1], shieldsSplit[2]
+		escapedValue := url.PathEscape(value)
+		escapedName := url.PathEscape(name)
+		shields = append(shields, Shield{Name: escapedName, Value: escapedValue, Description: description})
+	}
+	return shields
 }
 
 func validateInitReadmeCmd(cmd *cobra.Command, args []string) error {
