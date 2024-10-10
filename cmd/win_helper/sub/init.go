@@ -28,6 +28,7 @@ type InitReadmeConfig struct {
 	Force         bool
 	Verbose       bool
 	Shields       []string
+	OutFile       string
 }
 
 var (
@@ -45,10 +46,11 @@ func init() {
 	initProjectCmd.Flags().BoolVarP(&initProjectConfig.Language, "language", "l", false, "gen language directory")
 
 	initReadmeCmd.Flags().StringArrayVar(&initReadmeConfig.Shields, "shields", []string{}, "name|value|description")
-	initReadmeCmd.Flags().StringVar(&initReadmeConfig.ProjectName, "project-name", "", "project name (required)")
-	initReadmeCmd.Flags().StringVar(&initReadmeConfig.PythonVersion, "python-version", "", "python version (required)")
-	initReadmeCmd.Flags().StringVar(&initReadmeConfig.DjangoVersion, "django-version", "", "django version (required)")
-	initReadmeCmd.Flags().BoolVarP(&initReadmeConfig.Force, "force", "f", false, "force write file")
+	initReadmeCmd.Flags().StringVarP(&initReadmeConfig.ProjectName, "name", "n", "", "project name (*)")
+	initReadmeCmd.Flags().StringVarP(&initReadmeConfig.OutFile, "out", "o", "README.md", "output file (default: README.md)")
+	initReadmeCmd.Flags().StringVar(&initReadmeConfig.PythonVersion, "python-version", "", "python version")
+	initReadmeCmd.Flags().StringVar(&initReadmeConfig.DjangoVersion, "django-version", "", "django version")
+	initReadmeCmd.Flags().BoolVarP(&initReadmeConfig.Force, "force", "f", false, "force write file (default: false)")
 	initReadmeCmd.Flags().BoolVar(&initReadmeConfig.Verbose, "verbose", false, "verbose")
 }
 
@@ -102,14 +104,32 @@ var initReadmeCmd = &cobra.Command{
 	Short: "init readme",
 	Args:  validateInitReadmeCmd,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		shields := ParseShieldString(initReadmeConfig.Shields)
+		shields := make([]Shield, 0, 4)
+		shields = append(shields, ParseShieldString(initReadmeConfig.Shields)...)
+		if initReadmeConfig.DjangoVersion != "" {
+			shields = append(shields, Shield{
+				Name:        "Django",
+				Value:       initReadmeConfig.DjangoVersion,
+				Description: "django version",
+			})
+		}
+		if initReadmeConfig.PythonVersion != "" {
+			shields = append(shields, Shield{
+				Name:        "Python",
+				Value:       initReadmeConfig.PythonVersion,
+				Description: "python version",
+			})
+		}
+		shields = append(shields, Shield{
+			Name:        "build",
+			Value:       "pass",
+			Description: "build status",
+		})
 		tplExample := pongo2.Must(pongo2.FromBytes(templates.ReadmeTemplate))
 
 		out, err := tplExample.ExecuteBytes(pongo2.Context{
-			"shields":       shields,
-			"djangoVersion": initReadmeConfig.DjangoVersion,
-			"pythonVersion": initReadmeConfig.PythonVersion,
-			"projectName":   initReadmeConfig.ProjectName,
+			"shields":     shields,
+			"projectName": initReadmeConfig.ProjectName,
 		})
 		if err != nil {
 			return err
@@ -117,16 +137,17 @@ var initReadmeCmd = &cobra.Command{
 		if initReadmeConfig.Verbose {
 			fmt.Println(string(out))
 		} else {
-			filename := "README.md"
+			filename := initReadmeConfig.OutFile
 			if fileUtils.FileExist(filename) && !initReadmeConfig.Force {
 				if !initReadmeConfig.Force {
+				outerLoop:
 					for {
 						fmt.Print("File exists. Do you want to continue? (yes/no)(default:no): ")
 						var input string
-						fmt.Scanln(&input)
+						_, _ = fmt.Scanln(&input)
 						switch input {
 						case "yes", "1", "true", "True":
-							break
+							break outerLoop
 						case "no", "0", "false", "False":
 							return nil
 						default:
@@ -134,12 +155,12 @@ var initReadmeCmd = &cobra.Command{
 						}
 					}
 				} else {
-					return fmt.Errorf("file alerady exist")
+					return fmt.Errorf("文件已经存在")
 				}
 			}
 			err = os.WriteFile(filename, out, 0o644)
 			if err != nil {
-				return fmt.Errorf("写入服务失败。%v", err)
+				return fmt.Errorf("写入文件失败。%v", err)
 			}
 		}
 		return nil
