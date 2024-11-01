@@ -39,7 +39,7 @@ func init() {
 	serverCmd.Flags().StringVar(&serverConfig.Name, "name", "", "name")
 	serverCmd.Flags().StringVar(&serverConfig.Executable, "executable", "", "executable")
 	serverCmd.Flags().StringVar(&serverConfig.Description, "description", "", "description")
-	serverCmd.Flags().StringVar(&serverConfig.StartMode, "start-mode", "", "start-mode(Boot|System|Automatic|Manual|Disabled) (default: Automatic)")
+	serverCmd.Flags().StringVar(&serverConfig.StartMode, "start-mode", "Automatic", "start-mode(Boot|System|Automatic|Manual|Disabled)")
 	serverCmd.Flags().StringSliceVar(&serverConfig.Depends, "depends", []string{}, "depends")
 	serverCmd.Flags().StringVar(&serverConfig.LogPath, "log-path", "logs", "log path")
 	serverCmd.Flags().StringVar(&serverConfig.Arguments, "arguments", "", "arguments")
@@ -52,9 +52,11 @@ func init() {
 	serverCmd.Flags().StringVar(&serverConfig.LogMode, "log-mode", "roll-by-size", "log mode")
 	serverCmd.Flags().StringVar(&serverConfig.LogPattern, "log-pattern", "", "log pattern")
 	serverCmd.Flags().StringVar(&serverConfig.LogAutoRollAtTime, "log-auto-roll-at-time", "", "log auto roll at time")
-	serverCmd.Flags().IntVar(&serverConfig.LogSizeThreshold, "log-size-threshold", 1024, "the rotation threshold in KB (defaults to 1MB)")
-	serverCmd.Flags().IntVar(&serverConfig.LogKeepFiles, "log-keep-files", 2, "rolled files to keep (defaults to 2.)")
+	serverCmd.Flags().IntVar(&serverConfig.LogSizeThreshold, "log-size-threshold", 1024, "the rotation threshold in KB")
+	serverCmd.Flags().IntVar(&serverConfig.LogKeepFiles, "log-keep-files", 2, "rolled files to keep")
 	serverCmd.Flags().BoolVar(&serverConfig.Force, "force", true, "force write")
+	_ = serverCmd.MarkFlagRequired("name")
+	_ = serverCmd.MarkFlagRequired("executable")
 
 	// Boot Start ("Boot")
 	// Device driver started by the operating system loader. This value is valid only for driver services.

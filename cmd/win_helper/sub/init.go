@@ -46,12 +46,13 @@ func init() {
 	initProjectCmd.Flags().BoolVarP(&initProjectConfig.Language, "language", "l", false, "gen language directory")
 
 	initReadmeCmd.Flags().StringArrayVar(&initReadmeConfig.Shields, "shields", []string{}, "name|value|description")
-	initReadmeCmd.Flags().StringVarP(&initReadmeConfig.ProjectName, "name", "n", "", "project name (*)")
-	initReadmeCmd.Flags().StringVarP(&initReadmeConfig.OutFile, "out", "o", "README.md", "output file (default: README.md)")
+	initReadmeCmd.Flags().StringVarP(&initReadmeConfig.ProjectName, "name", "n", "", "project name")
+	initReadmeCmd.Flags().StringVarP(&initReadmeConfig.OutFile, "out", "o", "README.md", "output file")
 	initReadmeCmd.Flags().StringVar(&initReadmeConfig.PythonVersion, "python-version", "", "python version")
 	initReadmeCmd.Flags().StringVar(&initReadmeConfig.DjangoVersion, "django-version", "", "django version")
 	initReadmeCmd.Flags().BoolVarP(&initReadmeConfig.Force, "force", "f", false, "force write file (default: false)")
 	initReadmeCmd.Flags().BoolVar(&initReadmeConfig.Verbose, "verbose", false, "verbose")
+	_ = initReadmeCmd.MarkFlagRequired("name")
 }
 
 var initCmd = &cobra.Command{
