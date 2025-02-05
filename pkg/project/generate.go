@@ -2,10 +2,9 @@ package project
 
 import (
 	"fmt"
+	"github.com/gookit/goutil/fsutil"
 	"os"
 	"path"
-
-	"win_helper/pkg/util/fileUtils"
 )
 
 func GenLanguagePaths(parent string) []string {
@@ -19,7 +18,7 @@ func GenLanguagePaths(parent string) []string {
 
 func CreateProjectDirs(dirs []string) {
 	for _, dir := range dirs {
-		if fileUtils.FileExist(dir) {
+		if fsutil.FileExist(dir) {
 			continue
 		}
 		err := os.MkdirAll(dir, 0o755)

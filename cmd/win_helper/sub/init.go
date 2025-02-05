@@ -2,18 +2,17 @@ package sub
 
 import (
 	"fmt"
+	"github.com/gookit/goutil/fsutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"win_helper/templates"
 
 	"github.com/flosch/pongo2/v6"
 	"github.com/spf13/cobra"
 
-	"win_helper/templates"
-
 	"win_helper/pkg/project"
-	"win_helper/pkg/util/fileUtils"
 )
 
 type InitProjectConfig struct {
@@ -126,7 +125,11 @@ var initReadmeCmd = &cobra.Command{
 			Value:       "pass",
 			Description: "build status",
 		})
-		tplExample := pongo2.Must(pongo2.FromBytes(templates.ReadmeTemplate))
+		template, err := templates.GetTemplateByName("project/README.md.tpl")
+		if err != nil {
+			return err
+		}
+		tplExample := pongo2.Must(pongo2.FromBytes(template))
 
 		out, err := tplExample.ExecuteBytes(pongo2.Context{
 			"shields":     shields,
@@ -139,7 +142,7 @@ var initReadmeCmd = &cobra.Command{
 			fmt.Println(string(out))
 		} else {
 			filename := initReadmeConfig.OutFile
-			if fileUtils.FileExist(filename) && !initReadmeConfig.Force {
+			if fsutil.FileExist(filename) && !initReadmeConfig.Force {
 				if !initReadmeConfig.Force {
 				outerLoop:
 					for {

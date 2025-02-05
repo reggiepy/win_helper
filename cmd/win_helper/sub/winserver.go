@@ -2,7 +2,7 @@ package sub
 
 import (
 	"fmt"
-	"win_helper/pkg/server"
+	"win_helper/pkg/winserver"
 
 	"github.com/spf13/cobra"
 )
@@ -87,27 +87,27 @@ var serverCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		s, err := server.NewServer(
-			server.WithSId(serverConfig.ID),
-			server.WithSName(serverConfig.Name),
-			server.WithSExecutable(serverConfig.Executable),
-			server.WithSDescription(serverConfig.Description),
-			server.WithSStartMode(serverConfig.StartMode),
-			server.WithSDepends(serverConfig.Depends),
-			server.WithSLogPath(serverConfig.LogPath),
-			server.WithSArguments(serverConfig.Arguments),
-			server.WithSStartArguments(serverConfig.StartArguments),
-			server.WithSStopExecutable(serverConfig.StopExecutable),
-			server.WithSStopArguments(serverConfig.StopArguments),
-			server.WithSEnv(serverConfig.Env),
-			server.WithSFailure(serverConfig.Failure),
-			server.WithSWorkingDirectory(serverConfig.WorkingDirectory),
-			server.WithSLogMode(serverConfig.LogMode),
-			server.WithSLogPattern(serverConfig.LogPattern),
-			server.WithSLogAutoRollAtTime(serverConfig.LogAutoRollAtTime),
-			server.WithSLogSizeThreshold(serverConfig.LogSizeThreshold),
-			server.WithSLogKeepFiles(serverConfig.LogKeepFiles),
-			server.WithSForce(serverConfig.Force),
+		s, err := winserver.NewServer(
+			winserver.WithSId(serverConfig.ID),
+			winserver.WithSName(serverConfig.Name),
+			winserver.WithSExecutable(serverConfig.Executable),
+			winserver.WithSDescription(serverConfig.Description),
+			winserver.WithSStartMode(serverConfig.StartMode),
+			winserver.WithSDepends(serverConfig.Depends),
+			winserver.WithSLogPath(serverConfig.LogPath),
+			winserver.WithSArguments(serverConfig.Arguments),
+			winserver.WithSStartArguments(serverConfig.StartArguments),
+			winserver.WithSStopExecutable(serverConfig.StopExecutable),
+			winserver.WithSStopArguments(serverConfig.StopArguments),
+			winserver.WithSEnv(serverConfig.Env),
+			winserver.WithSFailure(serverConfig.Failure),
+			winserver.WithSWorkingDirectory(serverConfig.WorkingDirectory),
+			winserver.WithSLogMode(serverConfig.LogMode),
+			winserver.WithSLogPattern(serverConfig.LogPattern),
+			winserver.WithSLogAutoRollAtTime(serverConfig.LogAutoRollAtTime),
+			winserver.WithSLogSizeThreshold(serverConfig.LogSizeThreshold),
+			winserver.WithSLogKeepFiles(serverConfig.LogKeepFiles),
+			winserver.WithSForce(serverConfig.Force),
 		)
 		if err != nil {
 			return err
