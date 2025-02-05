@@ -5,9 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
-	"win_helper/pkg/obr/app"
-	"win_helper/pkg/obr/git"
-	"win_helper/pkg/obr/iss"
+	"win_helper/pkg/obr"
 	"win_helper/pkg/util/versionUtils/manager"
 )
 
@@ -84,7 +82,7 @@ var updateISSCmd = &cobra.Command{
 		// 你的更新 ISS 版本的逻辑
 		fmt.Println("ISS version updated.")
 
-		version, err := iss.GetCurrentVersion(obrUpdateISSCmdConfig.IssPath)
+		version, err := obr.GetCurrentISSVersion(obrUpdateISSCmdConfig.IssPath)
 		if err != nil {
 			return err
 		}
@@ -96,7 +94,7 @@ var updateISSCmd = &cobra.Command{
 		}
 		newVersion := versionManager.GetVersion()
 		fmt.Printf("update version %s ---> %s", currentVersion, newVersion)
-		if err := iss.SaveVersion(newVersion, obrUpdateISSCmdConfig.IssPath); err != nil {
+		if err := obr.SaveISSVersion(newVersion, obrUpdateISSCmdConfig.IssPath); err != nil {
 			return fmt.Errorf("error saving version: %v", err)
 		}
 
@@ -105,10 +103,10 @@ var updateISSCmd = &cobra.Command{
 			if obrUpdateISSCmdConfig.GitMessage != "" {
 				commitMessage = obrUpdateISSCmdConfig.GitMessage
 			}
-			if err := git.CommitChanges(commitMessage); err != nil {
+			if err := obr.GitCommitChange(commitMessage); err != nil {
 				return err
 			}
-			if err := git.TagAndPush(newVersion, obrUpdateISSCmdConfig.GitMessage); err != nil {
+			if err := obr.GitTagAndPush(newVersion, obrUpdateISSCmdConfig.GitMessage); err != nil {
 				return err
 			}
 		}
@@ -130,7 +128,7 @@ var updateAppCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("error getting current directory: %v", err)
 		}
-		version, err := app.GetCurrentVersion(originalDir)
+		version, err := obr.GetAppCurrentVersion(originalDir)
 		if err != nil {
 			return err
 		}
@@ -152,11 +150,11 @@ var updateAppCmd = &cobra.Command{
 			if obrUpdateAppCmdConfig.GitMessage != "" {
 				commitMessage = obrUpdateAppCmdConfig.GitMessage
 			}
-			if err := git.CommitChanges(commitMessage); err != nil {
+			if err := obr.GitCommitChange(commitMessage); err != nil {
 				return err
 			}
 			tagName := "v" + newVersion
-			if err := git.TagAndPush(tagName, obrUpdateISSCmdConfig.GitMessage); err != nil {
+			if err := obr.GitTagAndPush(tagName, obrUpdateISSCmdConfig.GitMessage); err != nil {
 				return err
 			}
 		}

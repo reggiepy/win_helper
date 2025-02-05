@@ -1,4 +1,4 @@
-package iss
+package obr
 
 import (
 	"bufio"
@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func GetCurrentVersion(filePath string) (string, error) {
+func GetCurrentISSVersion(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", err
@@ -43,7 +43,7 @@ func GetCurrentVersion(filePath string) (string, error) {
 	}
 }
 
-func SaveVersion(version string, filePath string) error {
+func SaveISSVersion(version string, filePath string) error {
 	// 打开原始文件进行读取
 	inputFile, err := os.Open(filePath)
 	if err != nil {

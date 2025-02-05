@@ -1,4 +1,4 @@
-package app
+package obr
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-func GetCurrentVersion(dir string) (string, error) {
+func GetAppCurrentVersion(dir string) (string, error) {
 	var err error
 	fileName := filepath.Join(dir, "VERSION")
 	if !fsutil.FileExist(fileName) {

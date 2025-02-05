@@ -1,4 +1,4 @@
-package git
+package obr
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"os/exec"
 )
 
-// TagAndPush 封装了 Git 打标签和推送标签的逻辑
+// GitTagAndPush 封装了 Git 打标签和推送标签的逻辑
 //
 // 参数:
 //   - tagName: 要创建的 Git 标签名称 (如 "v2.2.0")。
@@ -18,7 +18,7 @@ import (
 // 流程:
 //   1. 使用 `git tag -a <tagName> -m <tagMessage>` 创建带注释的 Git 标签。
 //   2. 使用 `git push origin --tags` 将标签推送到远程仓库。
-func TagAndPush(tagName, tagMessage string) error {
+func GitTagAndPush(tagName, tagMessage string) error {
 	// 执行 `git tag -a <tagName> -m <tagMessage>`
 	cmdTag := exec.Command("git", "tag", "-a", tagName, "-m", tagMessage)
 	cmdTag.Stdout = os.Stdout
@@ -39,7 +39,7 @@ func TagAndPush(tagName, tagMessage string) error {
 	return nil
 }
 
-// CommitChanges 提交更改到 Git 仓库
+// GitCommitChange 提交更改到 Git 仓库
 //
 // 参数:
 //   - commitMessage: Git 提交时的说明信息。
@@ -51,7 +51,7 @@ func TagAndPush(tagName, tagMessage string) error {
 // 流程:
 //   1. 使用 `git add` 添加指定文件到暂存区。如果未提供文件，则添加全部更改。
 //   2. 使用 `git commit -m <commitMessage>` 提交更改到 Git 仓库。
-func CommitChanges(commitMessage string, commitFiles ...string) error {
+func GitCommitChange(commitMessage string, commitFiles ...string) error {
 	// 判断是否有需要提交的指定文件
 	if len(commitFiles) > 0 {
 		// 逐个添加指定文件
